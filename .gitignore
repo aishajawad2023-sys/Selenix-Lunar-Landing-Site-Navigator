@@ -5,3 +5,4 @@ lunar-navigator/precompute/kernels/
 *.LBL
 .DS_Store
 node_modules/
+*.bundle
