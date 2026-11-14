@@ -1,0 +1,11 @@
+{
+ "halfKm": 30.0,
+ "px": 640,
+ "product": "LDEM_85S_40M",
+ "version": "V2.0",
+ "orientation": "0 deg E up, 90 deg E right (polar stereographic)",
+ "heightRangeM": [
+  -3452.0,
+  1958.0
+ ]
+}

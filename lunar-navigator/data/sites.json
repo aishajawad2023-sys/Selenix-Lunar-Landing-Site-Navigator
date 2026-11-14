@@ -1,0 +1,142 @@
+[
+  {
+    "id": "mons-mouton",
+    "name": "Mons Mouton plateau",
+    "lat": -84.79,
+    "lon": 29.2,
+    "elevationM": 5321.0,
+    "category": "candidate",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "source": "Approximate IM-2 (Athena) landing area on the Mons Mouton plateau; former VIPER target region. Verify against the NASA/IM published landing coordinates.",
+    "notes": "Broad, high plateau ~5 km above surroundings.",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "connecting-ridge",
+    "name": "Connecting Ridge (Shackleton\u2013de Gerlache)",
+    "lat": -89.4402,
+    "lon": -137.4058,
+    "elevationM": 1957.8,
+    "category": "candidate",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "refine": {
+      "radiusKm": 1.5,
+      "rule": "highest DEM point within radius",
+      "from": [
+        -89.45,
+        -137.3
+      ],
+      "done": true
+    },
+    "source": "Highly illuminated ridge region identified by Bussey et al. 2010, Mazarico et al. 2011, Gl\u00e4ser et al. 2018. Coordinates approximate; refined to the local LOLA high point.",
+    "notes": "Ridge between Shackleton and de Gerlache craters.",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "shackleton-rim",
+    "name": "Shackleton rim",
+    "lat": -89.779,
+    "lon": -156.3044,
+    "elevationM": 1736.9,
+    "category": "candidate",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "refine": {
+      "radiusKm": 1.0,
+      "rule": "highest DEM point within radius",
+      "from": [
+        -89.79,
+        -155.7
+      ],
+      "done": true
+    },
+    "source": "Shackleton rim illuminated-point region (Mazarico et al. 2011). Approximate; refined to local LOLA high point.",
+    "notes": "Rim of a 21 km crater whose floor is permanently shadowed.",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "de-gerlache-rim",
+    "name": "de Gerlache rim",
+    "lat": -88.6644,
+    "lon": -68.3901,
+    "elevationM": 1814.6,
+    "category": "candidate",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "refine": {
+      "radiusKm": 1.5,
+      "rule": "highest DEM point within radius",
+      "from": [
+        -88.71,
+        -68.7
+      ],
+      "done": true
+    },
+    "source": "de Gerlache rim illuminated region (Bussey et al. 2010; Gl\u00e4ser et al. 2018). Approximate; refined to local LOLA high point.",
+    "notes": "",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "malapert-massif",
+    "name": "Malapert massif",
+    "lat": -85.9896,
+    "lon": 2.0701,
+    "elevationM": 5172.8,
+    "category": "candidate",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "refine": {
+      "radiusKm": 3.0,
+      "rule": "highest DEM point within radius",
+      "from": [
+        -85.99,
+        2.9
+      ],
+      "done": true
+    },
+    "source": "Malapert massif summit region, proposed for its Earth view. Approximate; refined to local LOLA high point.",
+    "notes": "Near-side facing massif ~5 km high.",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "shackleton-floor",
+    "name": "Shackleton crater floor (PSR reference)",
+    "lat": -89.67,
+    "lon": 129.78,
+    "elevationM": -2788.9,
+    "category": "other",
+    "terrain": "lola",
+    "coordStatus": "approximate",
+    "source": "Shackleton crater centre (IAU Gazetteer of Planetary Nomenclature, approximate). Included as a permanently shadowed contrast case, not a landing candidate.",
+    "notes": "Deep-crater reference for terrain sanity check.",
+    "hasTerrainMask": true
+  },
+  {
+    "id": "shiv-shakti",
+    "name": "Shiv Shakti point (Chandrayaan-3)",
+    "lat": -69.373,
+    "lon": 32.319,
+    "elevationM": null,
+    "category": "past",
+    "terrain": "none",
+    "coordStatus": "verified",
+    "source": "ISRO, Chandrayaan-3 Vikram landing site (69.373\u00b0S, 32.319\u00b0E).",
+    "notes": "Outside the polar DEM tiles used here, so no terrain mask: results are geometry only.",
+    "hasTerrainMask": false
+  },
+  {
+    "id": "south-pole",
+    "name": "Geographic south pole (90\u00b0S)",
+    "lat": -90.0,
+    "lon": 0.0,
+    "elevationM": 1289.6,
+    "category": "other",
+    "terrain": "lola",
+    "coordStatus": "verified",
+    "source": "Definition. Used for the polar-limit validation checks.",
+    "notes": "Azimuth 0 here points along the 0\u00b0 meridian.",
+    "hasTerrainMask": true
+  }
+]

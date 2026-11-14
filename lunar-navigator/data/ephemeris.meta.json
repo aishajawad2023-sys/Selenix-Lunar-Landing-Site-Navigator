@@ -1,0 +1,31 @@
+{
+  "startUtc": "2026-01-01T00:00:00Z",
+  "startEpochMs": 1767225600000,
+  "stepSec": 3600,
+  "count": 43825,
+  "valuesPerRecord": 6,
+  "layout": [
+    "sun_x",
+    "sun_y",
+    "sun_z",
+    "earth_x",
+    "earth_y",
+    "earth_z"
+  ],
+  "units": "km",
+  "frame": "MOON_ME",
+  "observer": "MOON (centre)",
+  "aberration": "NONE (geometric). Light time and stellar aberration change apparent Sun direction by ~0.006 deg; recorded as a limitation.",
+  "timeIndex": "UTC; TDB = UTC + 69.184 s in this window (no leap seconds in naif0012)",
+  "dtype": "float32 little-endian",
+  "kernels": [
+    "naif0012.tls",
+    "de440s.bsp",
+    "moon_pa_de440_200625.bpc",
+    "moon_de440_250416.tf",
+    "pck00011.tpc"
+  ],
+  "toolkit": "CSPICE_N0067",
+  "generator": "precompute/make_ephemeris.py",
+  "generatedUtc": "2026-11-14T14:52:29Z"
+}

@@ -1,0 +1,61 @@
+{
+  "marginPct": 10,
+  "note": "Default thresholds are illustrative user assumptions (quality class user-assumption). Edit here or in the app; no code change needed.",
+  "requirements": [
+    {
+      "id": "REQ-SUN",
+      "label": "Sunlit fraction of mission",
+      "metric": "sunlitPct",
+      "op": ">=",
+      "threshold": 70,
+      "unit": "%",
+      "visibilityDependent": true,
+      "powerDependent": false,
+      "rationale": "Enough sunlit time for solar-powered surface operations."
+    },
+    {
+      "id": "REQ-DARK",
+      "label": "Longest continuous darkness",
+      "metric": "longestDarkGapH",
+      "op": "<=",
+      "threshold": 50,
+      "unit": "h",
+      "visibilityDependent": true,
+      "powerDependent": false,
+      "rationale": "Darkness the lander must survive on battery and heaters."
+    },
+    {
+      "id": "REQ-EARTH",
+      "label": "Direct-to-Earth visible fraction",
+      "metric": "earthVisiblePct",
+      "op": ">=",
+      "threshold": 40,
+      "unit": "%",
+      "visibilityDependent": true,
+      "powerDependent": false,
+      "rationale": "Geometric DTE availability (not a link budget)."
+    },
+    {
+      "id": "REQ-COMMS-GAP",
+      "label": "Longest gap without Earth in view",
+      "metric": "longestNoEarthGapH",
+      "op": "<=",
+      "threshold": 72,
+      "unit": "h",
+      "visibilityDependent": true,
+      "powerDependent": false,
+      "rationale": "Onboard autonomy and data buffering duration."
+    },
+    {
+      "id": "REQ-POWER",
+      "label": "Battery margin above depth-of-discharge floor",
+      "metric": "socMarginPct",
+      "op": ">=",
+      "threshold": 10,
+      "unit": "%",
+      "visibilityDependent": true,
+      "powerDependent": true,
+      "rationale": "Minimum charge stays at least 10% of capacity above the DoD floor; 0 means brownout."
+    }
+  ]
+}

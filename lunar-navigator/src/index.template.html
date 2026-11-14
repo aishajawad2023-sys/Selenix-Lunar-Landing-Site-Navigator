@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar Mission Navigator</title>
+<meta name="description" content="Decision support for lunar south pole landing sites and dates: Sun, Earth, terrain, power and communications, with evidence for every number.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/*STYLE*/
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="28" height="28"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 20 Q16 13 27 20" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="22" cy="9" r="2.5" fill="currentColor"/></svg>
+    </div>
+    <div>
+      <h1>Lunar Mission Decision-Support Navigator</h1>
+      <p class="sub">South-pole sites and dates: what the Sun, Earth and terrain mean for power, darkness and comms. Every number opens its evidence.</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="btn-export" class="btn">Copy comparison as JSON</button>
+    <button id="btn-reset" class="btn ghost">Reset demo</button>
+  </div>
+</header>
+<nav class="toc" aria-label="Sections">
+  <a href="#s-scen">1 Scenarios</a><a href="#s-verdict">2 Verdicts</a><a href="#s-impl">3 Implications</a><a href="#s-time">4 Timeline</a><a href="#s-horizon">5 Horizon</a><a href="#s-heat">6 Date sweep</a><a href="#s-req">7 Requirements</a><a href="#s-sites">8 Sites</a><a href="#s-valid">9 Validation</a>
+</nav>
+<main id="app">
+  <section id="s-scen" class="card"><h2><span class="n">1</span>Scenarios <small>Up to 3, compared on mission-elapsed time with the same assumptions</small></h2><div id="scenarios"></div><div id="hardware"></div></section>
+  <section id="s-verdict" class="card"><h2><span class="n">2</span>Requirement verdicts <small>meets / needs review / does not meet / unknown, never “feasible”</small></h2><div id="keymetrics"></div><div id="verdicts"></div><div id="changes"></div></section>
+  <section id="s-impl" class="card"><h2><span class="n">3</span>Mission implications <small>Rule-based statements; click one to see its rule and inputs</small></h2><div id="implications"></div></section>
+  <section id="s-time" class="card"><h2><span class="n">4</span>Mission-elapsed-time timeline <small>Sun and Earth visibility and battery state of charge; drag the cursor</small></h2><div id="timeline"></div></section>
+  <section id="s-horizon" class="card"><h2><span class="n">5</span>Horizon view <small>Terrain silhouette with the Sun and Earth at the cursor time</small></h2><div id="horizon"></div></section>
+  <section id="s-heat" class="card"><h2><span class="n">6</span>Date sweep <small>Every site × start date. Click a cell to load it as a scenario</small></h2><div id="heatmap"></div></section>
+  <section id="s-req" class="card"><h2><span class="n">7</span>Requirements <small>Your stated thresholds (user assumptions)</small></h2><div id="reqedit"></div></section>
+  <section id="s-sites" class="card"><h2><span class="n">8</span>Sites and terrain <small>Curated library, LOLA horizon masks, custom sites</small></h2><div id="sites"></div></section>
+  <section id="s-valid" class="card"><h2><span class="n">9</span>Validation status and limits <small>If a check fails it is shown here, not hidden</small></h2><div id="validation"></div></section>
+</main>
+<footer class="foot">Static decision-support prototype, NASA Space Apps 2026. Not a replacement for validated mission-analysis tools and not a feasibility certificate. Data: LRO LOLA (PDS), NAIF SPICE DE440, cross-checked with JPL Horizons.</footer>
+<aside id="drawer" class="drawer" aria-hidden="true" role="dialog" aria-label="Evidence">
+  <div class="drawer-head"><h3>Evidence</h3><button class="btn ghost" id="drawer-close" aria-label="Close evidence">✕</button></div>
+  <div id="drawer-body"></div>
+</aside>
+<div id="tooltip" class="tooltip" role="status"></div>
+<script>
+/*DATA*/
+</script>
+<script>
+/*ENGINE*/
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>

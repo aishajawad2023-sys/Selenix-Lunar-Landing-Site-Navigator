@@ -1,0 +1,198 @@
+{
+  "note": "Mission Implications rules. Wording is data: edit templates here without touching the engine. Condition grammar: {metric, op, value|ref} | {all:[...]} | {any:[...]} | {flag}. Template fields {name|format}; formats: h, pct, pct0, wh, w, deg, x1, m, met, int.",
+  "rules": [
+    {
+      "id": "R5",
+      "title": "Fidelity",
+      "severity": "warning",
+      "condition": {
+        "flag": "noTerrain"
+      },
+      "template": "Terrain is not modelled for this site. Sun and Earth visibility come from geometry only, so they are optimistic: real terrain can only hide them more often.",
+      "vars": {},
+      "inputs": [
+        "site.hasTerrainMask"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R9",
+      "title": "Landing in darkness",
+      "severity": "critical",
+      "condition": {
+        "metric": "sunlitAtStart",
+        "op": "==",
+        "value": 0
+      },
+      "template": "At T+0 the Sun is hidden by terrain or the horizon: the lander arrives in darkness. First sunrise is at {rise|met}.",
+      "vars": {
+        "rise": "metric:timeToSunriseH"
+      },
+      "inputs": [
+        "sunVisible series"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R4",
+      "title": "Brownout",
+      "severity": "critical",
+      "condition": {
+        "metric": "brownoutMetH",
+        "op": "!=",
+        "value": null
+      },
+      "template": "With a {load|w} load and a {bat|wh} battery ({dod|pct0} usable), the battery reaches its depth-of-discharge floor at {t|met}.",
+      "vars": {
+        "t": "metric:brownoutMetH",
+        "load": "hw:loadW",
+        "bat": "hw:batteryWh",
+        "dod": "hw:dodPct"
+      },
+      "inputs": [
+        "power series",
+        "hardware"
+      ],
+      "qualityClass": "engineering-estimate"
+    },
+    {
+      "id": "R1",
+      "title": "Storage",
+      "severity": "info",
+      "condition": {
+        "metric": "longestDarkGapH",
+        "op": ">",
+        "value": 0
+      },
+      "template": "The longest dark period is {gap|h}. At {load|w} this needs about {wh|wh} of usable storage ({bat|wh} installed).",
+      "vars": {
+        "gap": "metric:longestDarkGapH",
+        "load": "hw:loadW",
+        "wh": "metric:requiredStorageWh",
+        "bat": "hw:batteryWh"
+      },
+      "inputs": [
+        "sunVisible series",
+        "hardware"
+      ],
+      "qualityClass": "engineering-estimate"
+    },
+    {
+      "id": "R2",
+      "title": "Comms gap",
+      "severity": "warning",
+      "condition": {
+        "metric": "longestNoEarthGapH",
+        "op": ">",
+        "ref": "req:REQ-COMMS-GAP"
+      },
+      "template": "Earth contact is lost for up to {gap|h}. Plan onboard data buffering and autonomy for that duration.",
+      "vars": {
+        "gap": "metric:longestNoEarthGapH"
+      },
+      "inputs": [
+        "earthVisible series",
+        "REQ-COMMS-GAP"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R8",
+      "title": "No direct-to-Earth",
+      "severity": "critical",
+      "condition": {
+        "metric": "earthVisiblePct",
+        "op": "==",
+        "value": 0
+      },
+      "template": "Earth never rises above {minEl|deg} (terrain plus minimum antenna elevation) during this mission. Direct-to-Earth contact is not possible; a relay would be required.",
+      "vars": {
+        "minEl": "hw:minEarthElevDeg"
+      },
+      "inputs": [
+        "earthVisible series"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R3",
+      "title": "Panel choice",
+      "severity": "info",
+      "condition": {
+        "metric": "verticalToHorizontalRatio",
+        "op": ">",
+        "value": 2
+      },
+      "template": "A vertical sun-tracking array yields about {x|x1}× the energy of a horizontal one at this site and date. The Sun averages only {el|deg} above the horizon.",
+      "vars": {
+        "x": "metric:verticalToHorizontalRatio",
+        "el": "metric:meanSunElDeg"
+      },
+      "inputs": [
+        "power series by panel type"
+      ],
+      "qualityClass": "engineering-estimate"
+    },
+    {
+      "id": "R7",
+      "title": "Long shadows",
+      "severity": "info",
+      "condition": {
+        "all": [
+          {
+            "metric": "meanSunElDeg",
+            "op": "<",
+            "value": 10
+          },
+          {
+            "metric": "meanSunElDeg",
+            "op": ">",
+            "value": 0
+          }
+        ]
+      },
+      "template": "With the Sun at {el|deg} on average, a 1 m rock casts a shadow about {len|m} long. Expect long hazard shadows for landing and traverse imaging.",
+      "vars": {
+        "el": "metric:meanSunElDeg",
+        "len": "metric:shadowLengthM"
+      },
+      "inputs": [
+        "sunEl series"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R10",
+      "title": "Time to sunset",
+      "severity": "info",
+      "condition": {
+        "metric": "timeToSunsetH",
+        "op": "!=",
+        "value": null
+      },
+      "template": "The first sunset after landing comes at {t|met}. Critical first-day activities should fit before it.",
+      "vars": {
+        "t": "metric:timeToSunsetH"
+      },
+      "inputs": [
+        "sunVisible series"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R6",
+      "title": "Slip delta",
+      "severity": "info",
+      "condition": {
+        "comparison": true
+      },
+      "template": "Moving from {A} to {B} changes sunlit time by {d|pp}; the largest change is in {metric}.",
+      "vars": {},
+      "inputs": [
+        "two scenarios"
+      ],
+      "qualityClass": "computed-geometry",
+      "handledIn": "app.js (comparison rule)"
+    }
+  ]
+}

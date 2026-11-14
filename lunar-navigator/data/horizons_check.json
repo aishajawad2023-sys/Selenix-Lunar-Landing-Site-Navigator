@@ -1,0 +1,206 @@
+{
+ "source": "JPL Horizons API (DE441), apparent az/el, airless",
+ "rows": [
+  {
+   "site": "mons-mouton",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 323.701110887,
+   "horizonsEl": 2.616025565,
+   "oursAz": 323.7069,
+   "oursEl": 2.61636,
+   "dAz": 0.00579,
+   "dEl": 0.00033
+  },
+  {
+   "site": "mons-mouton",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 330.867029768,
+   "horizonsEl": -2.085547892,
+   "oursAz": 330.86721,
+   "oursEl": -2.08553,
+   "dAz": 0.00018,
+   "dEl": 1e-05
+  },
+  {
+   "site": "mons-mouton",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 40.312029509,
+   "horizonsEl": 4.180293871,
+   "oursAz": 40.31773,
+   "oursEl": 4.18012,
+   "dAz": 0.0057,
+   "dEl": -0.00017
+  },
+  {
+   "site": "mons-mouton",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 337.022642073,
+   "horizonsEl": -1.146928773,
+   "oursAz": 337.02283,
+   "oursEl": -1.14691,
+   "dAz": 0.00019,
+   "dEl": 2e-05
+  },
+  {
+   "site": "mons-mouton",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Sun",
+   "horizonsAz": 286.709987764,
+   "horizonsEl": 1.313261707,
+   "oursAz": 286.71591,
+   "oursEl": 1.31361,
+   "dAz": 0.00592,
+   "dEl": 0.00035
+  },
+  {
+   "site": "mons-mouton",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Earth",
+   "horizonsAz": 325.24699756,
+   "horizonsEl": -0.85284379,
+   "oursAz": 325.24724,
+   "oursEl": -0.85279,
+   "dAz": 0.00024,
+   "dEl": 5e-05
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 130.321564119,
+   "horizonsEl": -1.946965773,
+   "oursAz": 130.32736,
+   "oursEl": -1.94699,
+   "dAz": 0.0058,
+   "dEl": -2e-05
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 137.245847804,
+   "horizonsEl": -7.042168538,
+   "oursAz": 137.24603,
+   "oursEl": -7.04216,
+   "dAz": 0.00019,
+   "dEl": 0.0
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 206.789097734,
+   "horizonsEl": -0.297156312,
+   "oursAz": 206.79479,
+   "oursEl": -0.29697,
+   "dAz": 0.00569,
+   "dEl": 0.00019
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 143.476498763,
+   "horizonsEl": -6.38996443,
+   "oursAz": 143.47669,
+   "oursEl": -6.38995,
+   "dAz": 0.00019,
+   "dEl": 1e-05
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Sun",
+   "horizonsAz": 93.362897446,
+   "horizonsEl": -0.220689692,
+   "oursAz": 93.36883,
+   "oursEl": -0.22092,
+   "dAz": 0.00593,
+   "dEl": -0.00023
+  },
+  {
+   "site": "connecting-ridge",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Earth",
+   "horizonsAz": 131.673602511,
+   "horizonsEl": -5.501431763,
+   "oursAz": 131.67385,
+   "oursEl": -5.50139,
+   "dAz": 0.00025,
+   "dEl": 4e-05
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 319.117122793,
+   "horizonsEl": 14.257120168,
+   "oursAz": 319.12294,
+   "oursEl": 14.25848,
+   "dAz": 0.00581,
+   "dEl": 0.00136
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2026-06-01T00:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 327.108554484,
+   "horizonsEl": 10.791489906,
+   "oursAz": 327.10874,
+   "oursEl": 10.79153,
+   "dAz": 0.00018,
+   "dEl": 4e-05
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Sun",
+   "horizonsAz": 38.952029562,
+   "horizonsEl": 16.52390283,
+   "oursAz": 38.95785,
+   "oursEl": 16.5228,
+   "dAz": 0.00582,
+   "dEl": -0.0011
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2027-08-11T12:00:00Z",
+   "body": "Earth",
+   "horizonsAz": 333.207648262,
+   "horizonsEl": 12.563849954,
+   "oursAz": 333.20783,
+   "oursEl": 12.56389,
+   "dAz": 0.00019,
+   "dEl": 4e-05
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Sun",
+   "horizonsAz": 282.859887014,
+   "horizonsEl": 4.58894674,
+   "oursAz": 282.86553,
+   "oursEl": 4.59082,
+   "dAz": 0.00565,
+   "dEl": 0.00188
+  },
+  {
+   "site": "shiv-shakti",
+   "utc": "2029-12-24T06:30:00Z",
+   "body": "Earth",
+   "horizonsAz": 321.251647752,
+   "horizonsEl": 11.111979964,
+   "oursAz": 321.25188,
+   "oursEl": 11.11207,
+   "dAz": 0.00024,
+   "dEl": 9e-05
+  }
+ ],
+ "worstAbsDiffDeg": 0.00593,
+ "tolerance": 0.05,
+ "status": "pass"
+}
