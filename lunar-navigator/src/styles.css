@@ -234,3 +234,8 @@ canvas { display: block; width: 100%; }
 .wtab .lk { vertical-align: -1px; margin-right: 4px; }
 .jump { font: inherit; background: none; border: none; padding: 0; color: var(--blue); cursor: pointer; font-variant-numeric: tabular-nums; }
 .jump:hover { text-decoration: underline; }
+
+/* clickable map markers */
+.polemap .mk { cursor: pointer; outline: none; }
+.polemap .mk:hover .dot, .polemap .mk:focus-visible .dot { stroke: var(--blue); stroke-width: .9; }
+.polemap .mk:focus-visible text { fill: var(--blue); }

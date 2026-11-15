@@ -478,13 +478,13 @@
       const ui = used.findIndex(u => u.siteId === s.id), col = ui >= 0 ? `var(${CV[ui]})` : '#fff';
       const crowded = placed.some(p => Math.hypot(p[0] - x, p[1] - y) < 5); placed.push([x, y]);
       const right = x > 62;
-      return `<g><circle cx="${x}" cy="${y}" r="${ui >= 0 ? 1.9 : 1.2}" fill="${col}" stroke="#000" stroke-width=".45"><title>${esc(s.name)} (${fmtCoord(s)})</title></circle>${crowded && ui < 0 ? '' : `<text x="${x + (right ? -2.6 : 2.6)}" y="${y + 1}" text-anchor="${right ? 'end' : 'start'}" font-size="2.7" fill="#fff" stroke="#000" stroke-width=".55" paint-order="stroke" font-weight="600">${esc(s.name.split(' (')[0])}</text>`}</g>`; }).join('');
+      return `<g class="mk" data-site="${s.id}" role="button" tabindex="0" aria-label="${esc(s.name)}: open site details"><title>${esc(s.name)} (${fmtCoord(s)}): click for details</title><circle cx="${x}" cy="${y}" r="3.4" fill="transparent"/><circle class="dot" cx="${x}" cy="${y}" r="${ui >= 0 ? 1.9 : 1.2}" fill="${col}" stroke="#000" stroke-width=".45"/>${crowded && ui < 0 ? '' : `<text x="${x + (right ? -2.6 : 2.6)}" y="${y + 1}" text-anchor="${right ? 'end' : 'start'}" font-size="2.7" fill="#fff" stroke="#000" stroke-width=".55" paint-order="stroke" font-weight="600">${esc(s.name.split(' (')[0])}</text>`}</g>`; }).join('');
     const rings = (view === 'pole' ? [-89.5, -89.75] : [-88, -86, -84]).map(lat => `<circle cx="50" cy="50" r="${50 * R2 * Math.tan(Math.PI / 4 + lat * Math.PI / 360) / half}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width=".22" stroke-dasharray="1 1"/>`).join('');
     const ticks = [0, 90, 180, 270].map(l => { const [x, y] = proj(view === 'pole' ? -89.2 : -85.2, l); return `<text x="${x}" y="${y + 1}" font-size="2.5" fill="#fff" fill-opacity=".8" stroke="#000" stroke-width=".5" paint-order="stroke" text-anchor="middle">${['0°', '90°E', '180°', '90°W'][l / 90]}</text>`; }).join('');
     return `<div class="mapwrap"><h2 style="margin:0">Lunar south pole <small>${esc(L.label)}</small></h2>
       <div class="tabs">${Object.entries(mm.layers).map(([k, v]) => `<button class="btn sm" data-layer="${k}" aria-pressed="${k === layer}">${esc(v.label)}</button>`).join('')}<span style="flex:1"></span><button class="btn sm" data-view="region" aria-pressed="${view === 'region'}">±175 km</button><button class="btn sm" data-view="pole" aria-pressed="${view === 'pole'}">±30 km</button></div>
       <div class="polemap"><img alt="${esc(L.label)} of the lunar south pole" src="data:image/jpeg;base64,${D.maps.img[layer + '_' + view]}"><svg viewBox="0 0 100 100">${rings}${marks}${ticks}</svg></div>
-      <div class="mapcap">${esc(L.source)}${L.scale ? ' · ' + esc(L.scale) : ''}. ${layer === 'relief' ? '' : 'Published product shown for context and used as the benchmark; not computed by this tool. '}Polar stereographic, 0° longitude up; rings at ${view === 'pole' ? '89.5 and 89.75' : '88, 86 and 84'}°S.</div></div>`;
+      <div class="mapcap">${esc(L.source)}${L.scale ? ' · ' + esc(L.scale) : ''}. ${layer === 'relief' ? '' : 'Published product shown for context and used as the benchmark; not computed by this tool. '}Polar stereographic, 0° longitude up; rings at ${view === 'pole' ? '89.5 and 89.75' : '88, 86 and 84'}°S. Click a site for details or to use it in a scenario.</div></div>`;
   }
   function sitesHtml() {
     const sitesShown = allSites().filter(s => state.showAllSites || s.demo || state.scenarios.some(x => x.siteId === s.id));
@@ -661,6 +661,20 @@
           <div class="box"><h3>Comparison (JSON)</h3><p class="small muted">Scenarios, metrics and bounds, windows, requirement proofs, mission log, differences, indicator records and validation status, with provenance.</p><button class="btn sm" data-act="export">Copy to clipboard</button></div>
         </div><p class="small muted" style="margin-top:12px">Columns use UTC, degrees and hours. Azimuth 0 = local north, clockwise. Frame MOON_ME; ${esc(E.CODE_VERSION)}.</p>` : '<p class="muted">Run a scenario first: press Next step.</p>');
     }
+    if (name.startsWith('site:')) {
+      const s = siteById(name.slice(5)); if (!s) return;
+      const p = published(s.id), shownN = Math.max(1, Math.min(shownCount(), state.scenarios.length));
+      const assign = state.scenarios.slice(0, shownN).map((sc, i) => sc.siteId === s.id ? `<span class="tag" style="border-color:var(${CV[i]})">scenario ${NAMES[i]} uses this site</span>` : `<button class="btn sm" data-assign="${i}|${s.id}"><span class="sw" style="--c:var(${CV[i]});margin-right:6px"></span>Use for scenario ${NAMES[i]}</button>`).join(' ');
+      return drawer('Site', `<div class="ev-kind">${esc(s.category || 'custom')} site</div><h3 style="font-size:17px;margin-top:2px">${esc(s.name)}</h3>
+        <div class="row" style="margin:12px 0 4px">${assign}</div>
+        ${state.mode === 'guided' && state.beat > 1 ? '<p class="small muted">Changing a site during the guided demo changes the story that follows; Reset demo restores it.</p>' : ''}<dl>
+        <dt>Coordinates</dt><dd>${num({ kind: 'measured', label: s.name + ': coordinates', text: fmtCoord(s), site: s }, fmtCoord(s))} <span class="tag" title="${esc(s.source || '')}">${esc(s.coordStatus || 'user-entered')}</span> <button class="btn sm ghost" data-copy="${s.lat}, ${s.lon}">copy</button></dd>
+        <dt>Elevation</dt><dd>${s.elevationM === null || s.elevationM === undefined ? '—' : num({ kind: 'measured', label: s.name + ': elevation', text: Math.round(s.elevationM) + ' m', site: s, field: 'elevation' }, Math.round(s.elevationM) + ' m') + ' <span class="muted">relative to 1737.4 km, from LOLA</span>'}</dd>
+        <dt>Terrain</dt><dd>${maskRec(s.id) ? `${state.uploadedMasks[s.id] ? 'User-supplied mask' : 'LOLA horizon mask'} loaded: visibility results are terrain-adjusted.` : '<span style="color:var(--warn)">Unavailable</span>: results for this site are upper bounds and visibility requirements cannot read “meets”.'}</dd>
+        ${p ? `<dt>Published long-term averages (18.6 years)</dt><dd>Sun visible ${num({ kind: 'measured', label: s.name + ': published average illumination', text: p.publishedSunPct.toFixed(1) + '%', site: s, field: 'published', p }, p.publishedSunPct.toFixed(0) + '%')} · Earth visible ${num({ kind: 'measured', label: s.name + ': published average Earth visibility', text: p.publishedEarthPct.toFixed(1) + '%', site: s, field: 'published', p }, p.publishedEarthPct.toFixed(0) + '%')} <span class="muted">(NASA GSFC PGDA). A 10-day mission can differ greatly from the average.</span></dd>` : ''}
+        <dt>Source</dt><dd>${esc(s.source || 'User entry')}${s.sourceUrl ? ` <a href="${esc(s.sourceUrl)}" target="_blank" rel="noopener">link</a>` : ''}</dd>${s.notes ? `<dt>Notes</dt><dd>${esc(s.notes)}</dd>` : ''}
+        <dt>Inspect</dt><dd><a href="https://quickmap.lroc.im-ldi.com/" target="_blank" rel="noopener">LROC QuickMap</a> · <a href="https://trek.nasa.gov/moon/" target="_blank" rel="noopener">Moon Trek</a></dd></dl>`);
+    }
     if (name === 'whyterrain') return drawer('Why terrain matters', `<p>Near the lunar south pole the Sun never climbs more than a few degrees above the horizon, and Earth sits low too. A ridge a few kilometres away can hide either one for days.</p><p style="margin-top:10px">Without a terrain horizon for a site, SELENIX cannot tell whether a body above the smooth-sphere horizon is really visible. It therefore classifies those samples as <b>uncertain</b>, reports the figures as upper bounds, and never returns “meets” for a visibility requirement.</p><p style="margin-top:10px">Curated sites load their LOLA-derived masks automatically. For another site, compute one with <span class="mono">precompute/horizon_mask.py</span> and load it here.</p>`);
   }
 
@@ -731,7 +745,7 @@
   // ---------------------------------------------------------------- events
   let maskSite = null;
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],[data-step],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
+    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],[data-step],[data-site],[data-assign],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
     if (!t) { if (!e.target.closest('#drawer') && e.target.id !== 'tl-canvas' && !(e.target.tagName === 'A' && e.target.hasAttribute('download'))) closeDrawer(); return; }
     if (t.dataset.ev) return openEvidence(EV[t.dataset.ev]);
     if (t.dataset.copyev) return copy(JSON.stringify(EV[t.dataset.copyev].obj, null, 2), 'Record copied');
@@ -766,6 +780,12 @@
       return renderAll();
     }
     if (t.dataset.jump !== undefined) { stopPlay(); state.cursorH = +t.dataset.jump; return renderLive(); }
+    if (t.dataset.site) return openPanel('site:' + t.dataset.site);
+    if (t.dataset.assign) {
+      const [i, id] = t.dataset.assign.split('|'), prev = JSON.parse(JSON.stringify(state.scenarios));
+      state.scenarios[+i].siteId = id; closeDrawer(); renderAll();
+      return toast(`Scenario ${NAMES[+i]} now uses ${siteById(id).name}`, () => { state.scenarios = prev; renderAll(); });
+    }
     if (t.dataset.step) { stopPlay(); state.stepMin = +t.dataset.step; state.cursorH = Math.round(state.cursorH / stepH()) * stepH(); renderAll(); return toast(`Sampling every ${state.stepMin} min for all scenarios`); }
     if (t.dataset.wb) { state.windowBody = t.dataset.wb; return renderWindows(); }
     if (t.dataset.hz !== undefined) { state.horizonIdx = +t.dataset.hz; return renderLive(); }
@@ -818,7 +838,7 @@
     }
   });
   document.addEventListener('input', e => { if (e.target.id === 'cursor') { stopPlay(); state.cursorH = +e.target.value; renderLive(); save(); } });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); if (e.key === 'ArrowRight' && state.mode === 'guided' && !e.target.closest('input,select,textarea') && state.beat < 5) { state.beat++; renderAll(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.site) { e.preventDefault(); return openPanel('site:' + e.target.dataset.site); } if (e.key === 'ArrowRight' && state.mode === 'guided' && !e.target.closest('input,select,textarea') && state.beat < 5) { state.beat++; renderAll(); } });
 
   const tip = $('#tooltip');
   function showTip(html, ev) { tip.innerHTML = html; tip.classList.add('on'); const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
