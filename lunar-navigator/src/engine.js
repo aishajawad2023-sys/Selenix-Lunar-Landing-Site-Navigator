@@ -120,6 +120,7 @@
       maxSunElDeg: max(s.sunEl), maxEarthElDeg: max(s.earthEl), durationH: n * dtH,
     };
     const windows = { sun: intervals(s.sunState, dtH), earth: intervals(s.earthState, dtH) };
+    refineWindows(windows, { geometry, terrain, hw, fr, tol, t0, stepMs: stepMin * 60000, N });
     return { series: s, metrics: { ...primary.metrics, ...shared }, bounds: { conservative: { ...conservative.metrics, ...shared }, optimistic: { ...optimistic.metrics, ...shared } },
       windows, geometryOnly: !hasMask, qualityState: hasMask ? (shared.sunUncertainPct + shared.earthUncertainPct > 0 ? 'supported' : 'supported') : 'limited',
       config: cfg, site, scenario, hw, terrain, geometry };
@@ -188,6 +189,38 @@
       st = i;
     }
     return out;
+  }
+  /** Signed distance (deg) of a body above its visibility limit at time tMs (no tolerance applied). */
+  function marginAt(ctx, body, tMs) {
+    const v = ctx.geometry.vectors(tMs), p = azEl(v[body], ctx.fr);
+    const h = ctx.terrain ? ctx.terrain.horizonAt(p.az) : 0;
+    return p.el - (body === 'earth' ? Math.max(h, ctx.hw.minEarthElevDeg) : h);
+  }
+  /** Transition refinement (V1 spec 3.2, documented in docs/INTERFACES.md): for each change of state between
+   *  samples k-1 and k, bisect the interpolated geometry for the moment the margin crosses the boundary between
+   *  the two states (+tol between visible and uncertain, -tol between uncertain and obstructed, 0 when a step
+   *  jumps straight from visible to obstructed). 16 halvings of a 10-min step give ~0.01 s numerically; the
+   *  physical precision is limited by the 1-deg terrain bins and DEM, so times are reported to the minute. */
+  function refineWindows(windows, ctx) {
+    const bound = (a, b) => { const s = a + b; return s === 3 ? ctx.tol : s === 1 ? -ctx.tol : 0; }; // states 2+1, 1+0, 2+0
+    const IDX = { visible: 2, uncertain: 1, obstructed: 0 };
+    for (const body of ['sun', 'earth']) {
+      const ws = windows[body], dt = ctx.stepMs / 3600000;
+      const cut = (k, sa, sb) => {
+        const b = bound(sa, sb); let lo = ctx.t0 + (k - 1) * ctx.stepMs, hi = ctx.t0 + k * ctx.stepMs;
+        const g = t => marginAt(ctx, body, t) - b, glo = g(lo);
+        if (Math.sign(glo) === Math.sign(g(hi))) return { h: (k - 0.5) * dt, bisected: false };
+        for (let it = 0; it < 16; it++) { const mid = (lo + hi) / 2; if (Math.sign(g(mid)) === Math.sign(glo)) lo = mid; else hi = mid; }
+        return { h: ((lo + hi) / 2 - ctx.t0) / 3600000, bisected: true };
+      };
+      for (let j = 0; j < ws.length; j++) {
+        const w = ws[j];
+        if (j === 0) { w.startRefH = 0; w.startRefined = false; }
+        else { const c = cut(w.startIdx, IDX[ws[j - 1].state], IDX[w.state]); w.startRefH = c.h; w.startRefined = c.bisected; ws[j - 1].endRefH = c.h; ws[j - 1].endRefined = c.bisected; }
+      }
+      if (ws.length) { const last = ws[ws.length - 1]; last.endRefH = (ctx.N - 1) * dt; last.endRefined = false; last.endsWithMission = true; }
+      ws.forEach(w => { w.durationRefH = w.endRefH - w.startRefH; });
+    }
   }
   /** Minimum result record (V1 spec 8.3) for one sample and body. */
   function sampleRecord(run, k, body) {
@@ -380,6 +413,12 @@
       default: return (Math.round(v * 100) / 100).toString();
     }
   }
+  /** Hours to "T+ d h min" style text with minute resolution (for refined transition times). */
+  function fmtHM(h) {
+    if (Math.round(h * 60) === 0) return '0';
+    const m = Math.round(h * 60), d = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60), mm = m % 60;
+    return [d ? d + ' d' : '', hh ? hh + ' h' : '', mm || (!d && !hh) ? mm + ' min' : ''].filter(Boolean).join(' ');
+  }
   function fmtHours(h) {
     if (h < 47.5) return (h < 10 ? h.toFixed(1).replace(/\.0$/, '') : Math.round(h)) + ' h';
     const t = Math.round(h), d = Math.floor(t / 24), r = t - d * 24;
@@ -393,7 +432,7 @@
 
   const Engine = { R_MOON_KM, AU_KM, SOLAR_CONSTANT, CODE_VERSION, PANEL_TYPES, METRICS, DEFAULT_CONFIG, OBSTRUCTED, UNCERTAIN, VISIBLE, STATE_NAME,
     SpiceTableAdapter, HorizonMaskAdapter, enu, siteFrame, azEl, classify, cosIncidence, simulate, intervals, timeToTransition, longestRun, sampleRecord,
-    scenarioId, indicatorRecord, createStore, checkRequirement, subStateLabel, evalRule, evalCondition, fillTemplate, format, fmtHours, hash };
+    scenarioId, indicatorRecord, createStore, checkRequirement, subStateLabel, evalRule, evalCondition, fillTemplate, format, fmtHours, fmtHM, marginAt, hash };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
   else root.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

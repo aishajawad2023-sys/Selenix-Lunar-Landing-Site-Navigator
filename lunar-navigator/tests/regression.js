@@ -67,6 +67,20 @@ if (store.size() !== Object.keys(E.METRICS).length || !store.lineage(rec.id)) fa
 const sr = E.sampleRecord(A, 6, 'sun');
 for (const k of ['scenario_id', 'timestamp', 'mission_elapsed_time_h', 'body', 'azimuth_deg', 'elevation_deg', 'terrain_horizon_elevation_deg', 'visibility_state', 'quality_state', 'method']) if (!(k in sr)) fail('sample record field', k);
 
+// transition refinement: refined times agree with the raw sample times of a 1-minute-step run (themselves +/-1 min)
+{
+  const sc = { siteId: 'mons-mouton', startUtc: '2027-09-01T12:00:00Z', durationDays: 10 };
+  const coarse = E.simulate({ geometry, terrain: terrainFor('mons-mouton'), site: sites['mons-mouton'], scenario: sc, hw, config });
+  const fine = E.simulate({ geometry, terrain: terrainFor('mons-mouton'), site: sites['mons-mouton'], scenario: sc, hw, config: { ...config, stepMin: 1 } });
+  let worstMin = 0, n = 0;
+  for (const body of ['sun', 'earth']) for (const w of coarse.windows[body].slice(1)) {
+    const f = fine.windows[body].filter(x => x.state === w.state).map(x => x.startH).reduce((best, x) => Math.abs(x - w.startRefH) < Math.abs(best - w.startRefH) ? x : best, Infinity);
+    worstMin = Math.max(worstMin, Math.abs(f - w.startRefH) * 60); n++;
+  }
+  console.log(`transition refinement: ${n} transitions, worst difference from 1-min samples ${worstMin.toFixed(2)} min`);
+  if (!(worstMin < 1.5)) fail('transition refinement');
+}
+
 // records and proofs carry every field their JSON Schema requires
 const req = (schema, obj, what) => { for (const k of J('schemas/' + schema).required) if (!(k in obj)) fail(what + ' missing required field', k); };
 for (const r of store.list()) req('indicator-record.schema.json', r, r.id);

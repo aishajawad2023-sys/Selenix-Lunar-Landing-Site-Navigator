@@ -351,12 +351,14 @@
       if (i === null) return `<div class="r" style="--c:var(${CV[res.i]})"><b>${res.name}</b> · mission ended</div>`;
       const s = res.run.series, dt = s.stepMin / 60, sv = Array.from(s.sunState, v => v === E.VISIBLE ? 1 : 0), ev = Array.from(s.earthState, v => v === E.VISIBLE ? 1 : 0);
       const utc = new Date(s.t0 + i * s.stepMin * 60000).toISOString().slice(0, 16).replace('T', ' ');
-      const next = (arr, on, a, b) => { const t = E.timeToTransition(arr, i, on ? 1 : 0, on ? 0 : 1, dt); return t === null ? `no ${on ? a : b} before mission end` : `${on ? a : b} in ${E.fmtHours(t)}`; };
+      // next change between visible and not visible, from the refined window boundaries
+      const next = (body, a, b) => { const ws = res.run.windows[body], j = ws.findIndex(w => i >= w.startIdx && i <= w.endIdx), on = ws[j].state === 'visible';
+        const k = ws.findIndex((w, x) => x > j && (w.state === 'visible') !== on); return k < 0 ? `no ${on ? a : b} before mission end` : `${on ? a : b} in ${E.fmtHM(ws[k].startRefH - h)}`; };
       const stS = E.STATE_NAME[s.sunState[i]], stE = E.STATE_NAME[s.earthState[i]];
       const limE = Math.max(res.run.geometryOnly ? 0 : s.horizonEarth[i], state.hw.minEarthElevDeg);
       const ang = state.readoutOpen ? `<br><span class="small">Sun az ${snum(res, i, 'sun', 'az', s.sunAz[i].toFixed(2) + '°')} el ${snum(res, i, 'sun', 'el', s.sunEl[i].toFixed(2) + '°')} vs terrain ${res.run.geometryOnly ? 'unavailable' : snum(res, i, 'sun', 'h', s.horizonSun[i].toFixed(2) + '°')} · Earth az ${snum(res, i, 'earth', 'az', s.earthAz[i].toFixed(2) + '°')} el ${snum(res, i, 'earth', 'el', s.earthEl[i].toFixed(2) + '°')} vs limit ${snum(res, i, 'earth', 'h', limE.toFixed(2) + '°')}</span>` : '';
-      return `<div class="r" style="--c:var(${CV[res.i]})"><b>${res.name}</b> · ${utc} UTC · Sun <b>${snum(res, i, 'sun', 'state', stS)}</b>, ${next(sv, s.sunState[i] === E.VISIBLE, 'sunset', 'sunrise')}<br>
-        Earth <b>${snum(res, i, 'earth', 'state', stE)}</b>, ${next(ev, s.earthState[i] === E.VISIBLE, 'Earthset', 'Earthrise')} · battery ${num({ kind: 'model-sample', res, k: i }, (100 * s.soc[i] / state.hw.batteryWh).toFixed(0) + '%')}<span class="est">est.${state.hw.confirmed ? '' : ', default panel'}</span>${ang}</div>`;
+      return `<div class="r" style="--c:var(${CV[res.i]})"><b>${res.name}</b> · ${utc} UTC · Sun <b>${snum(res, i, 'sun', 'state', stS)}</b>, ${next('sun', 'sunset', 'sunrise')}<br>
+        Earth <b>${snum(res, i, 'earth', 'state', stE)}</b>, ${next('earth', 'Earthset', 'Earthrise')} · battery ${num({ kind: 'model-sample', res, k: i }, (100 * s.soc[i] / state.hw.batteryWh).toFixed(0) + '%')}<span class="est">est.${state.hw.confirmed ? '' : ', default panel'}</span>${ang}</div>`;
     }).join('');
   }
 
@@ -368,13 +370,13 @@
     const body = state.windowBody || 'sun', o = ok(), col = body === 'sun' ? 'var(--sun)' : 'var(--earth)';
     const key = st => st === 'visible' ? `<i class="lk" style="background:${col}"></i>` : st === 'uncertain' ? `<i class="lk hatch" style="color:${col}"></i>` : '<i class="lk" style="background:var(--surface-3);outline:1px solid var(--border-2)"></i>';
     const rows = o.map(res => res.run.windows[body].map(w => {
-      const cur = state.cursorH >= w.startH && (state.cursorH < w.startH + w.durationH);
+      const cur = state.cursorH >= w.startRefH && (state.cursorH < w.endRefH || w.endsWithMission);
       return `<tr class="${cur ? 'cur' : ''}"><td><span class="sw" style="--c:var(${CV[res.i]});margin-right:6px"></span>${res.name}</td><td>${key(w.state)} ${w.state}</td>
-        <td><button class="jump" data-jump="${w.startH}" title="Move the cursor here">T+${E.fmtHours(w.startH)}</button> <span class="muted small">${utcAt(res, w.startH)}</span></td>
-        <td>T+${E.fmtHours(w.endH)} <span class="muted small">${utcAt(res, w.endH)}</span></td>
-        <td>${num({ kind: 'window', res, w, body }, E.fmtHours(w.durationH))}</td></tr>`; }).join('')).join('');
+        <td><button class="jump" data-jump="${Math.ceil(w.startRefH * 6) / 6}" title="Move the cursor here">T+${E.fmtHM(w.startRefH)}</button> <span class="muted small">${utcAt(res, w.startRefH)}</span></td>
+        <td>${w.endsWithMission ? 'mission end' : `T+${E.fmtHM(w.endRefH)} <span class="muted small">${utcAt(res, w.endRefH)}</span>`}</td>
+        <td>${num({ kind: 'window', res, w, body }, E.fmtHM(w.durationRefH))}</td></tr>`; }).join('')).join('');
     el.innerHTML = `<div class="wins"><div class="tabs" style="margin:10px 0 6px"><button class="btn sm" data-wb="sun" aria-pressed="${body === 'sun'}">Sun windows</button><button class="btn sm" data-wb="earth" aria-pressed="${body === 'earth'}">Earth windows</button>
-      <span class="small muted">Start and end are known to within one ${CFG.stepMin}-min sample. Summary gaps count uncertain windows as not visible. Click a start time to move the cursor.</span></div>
+      <span class="small muted">Times refined between samples to the minute. Summary metrics count ${CFG.stepMin}-min samples and treat uncertain as not visible. Click a start time to move the cursor.</span></div>
       <div class="tablewrap wtab"><table><thead><tr><th>Scenario</th><th>State</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   }
 
@@ -595,12 +597,13 @@
       const { res, w, body } = ev, B = body === 'sun' ? 'Sun' : 'Earth', s = res.run.series, tol = CFG.toleranceDeg;
       const q = res.run.geometryOnly ? 'limited' : w.state === 'uncertain' ? 'uncertain' : 'supported';
       const limit = body === 'sun' ? 'the terrain horizon at the Sun azimuth' : `the higher of the terrain horizon and the ${state.hw.minEarthElevDeg}° minimum antenna elevation`;
-      const rec = { scenario: res.name, scenarioHash: E.scenarioId(res.run), body, state: w.state, startMetH: w.startH, endMetH: w.endH, durationH: w.durationH, samples: w.samples, stepMin: s.stepMin,
-        startUtc: utcAt(res, w.startH) + 'Z', endUtc: utcAt(res, w.endH) + 'Z', toleranceDeg: tol, site: res.site.id, terrain: res.run.geometryOnly ? null : 'horizon_' + res.site.id, method: E.CODE_VERSION };
+      const rec = { scenario: res.name, scenarioHash: E.scenarioId(res.run), body, state: w.state, startMetH: w.startRefH, endMetH: w.endRefH, durationH: w.durationRefH, endsWithMission: !!w.endsWithMission,
+        sampleStartMetH: w.startH, sampleDurationH: w.durationH, samples: w.samples, stepMin: s.stepMin, startUtc: utcAt(res, w.startRefH) + 'Z', endUtc: utcAt(res, w.endRefH) + 'Z', toleranceDeg: tol, site: res.site.id, terrain: res.run.geometryOnly ? null : 'horizon_' + res.site.id, method: E.CODE_VERSION };
       return drawer('Evidence', `${head('Geometry-derived result', `${B} ${w.state} window · scenario ${res.name}`, E.fmtHours(w.durationH), '', 'computed-geometry', `<span class="qc">${q}</span>`)}<dl>
-        <dt>Window</dt><dd>From T+${E.fmtHours(w.startH)} (${rec.startUtc.replace('Z', '')} UTC) to T+${E.fmtHours(w.endH)} (${rec.endUtc.replace('Z', '')} UTC): ${w.samples} consecutive sample${w.samples > 1 ? 's' : ''} of ${s.stepMin} min.</dd>
+        <dt>Window (refined)</dt><dd>From T+${E.fmtHM(w.startRefH)} (${utcAt(res, w.startRefH)} UTC) to ${w.endsWithMission ? 'the end of the mission' : `T+${E.fmtHM(w.endRefH)} (${utcAt(res, w.endRefH)} UTC)`}: ${E.fmtHM(w.durationRefH)}.</dd>
+        <dt>Window (samples)</dt><dd>${w.samples} consecutive sample${w.samples > 1 ? 's' : ''} of ${s.stepMin} min starting T+${E.fmtHours(w.startH)}: ${E.fmtHours(w.durationH)}. This is the accounting the summary metrics use.</dd>
         <dt>How it is classified</dt><dd>${B} centre compared with ${limit}: visible above it by more than ${tol}°, obstructed below it by more than ${tol}°, otherwise uncertain.${res.run.geometryOnly ? ' Terrain is unavailable for this site, so no sample can be visible.' : ''}</dd>
-        <dt>Timing precision</dt><dd>The change of state happens somewhere between the last sample in one state and the first in the next, so start and end are known to within ${s.stepMin} min. The duration counts samples × step, the same accounting as the summary metrics.</dd>
+        <dt>Timing precision</dt><dd>Each change of state lies between two ${s.stepMin}-min samples. SELENIX bisects the interpolated geometry between them for the moment the body crosses the state boundary (${tol}° above the limit between visible and uncertain, ${tol}° below it between uncertain and obstructed). ${w.startRefined === false && w.startRefH > 0 ? 'The start could not be bisected (no sign change), so the midpoint of the step is used. ' : ''}Times are reported to the minute; the 1° terrain bins limit real precision to a few minutes at grazing angles.</dd>
         <dt>Site and terrain</dt><dd>${esc(res.site.name)} · ${res.run.geometryOnly ? 'terrain unavailable' : esc(res.run.terrain.rec.uploaded ? 'user-supplied mask' : 'LOLA ' + res.run.terrain.rec.dem.product)}</dd>
         <dt>Validation</dt><dd>${valRefs(['horizons', 'regression', 'illumination-benchmark'])}</dd>${repro('window', rec.scenarioHash)}</dl>` + copyBtn(rec));
     }

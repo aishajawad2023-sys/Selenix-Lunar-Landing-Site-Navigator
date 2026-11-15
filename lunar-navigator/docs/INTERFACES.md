@@ -81,3 +81,13 @@ visibility state, quality state, and method and data versions.
 `data/rules.json`: `id`, `condition`, `log` (one-line entry), `template` (detail), `vars`, `inputs`,
 `qualityClass`, optional `shared` + `sharedLog` + `chip`. Wording is data. `Engine.evalRule` fills the
 templates; nothing is free-text generated.
+
+## 7. Transition refinement
+
+Summary metrics count samples (V1 specification 4.4). Window start and end times are refined between
+samples: for each change of state between samples k−1 and k, `refineWindows` bisects the interpolated
+geometry (16 halvings) for the moment the body's margin above its limit crosses the state boundary:
++tolerance between visible and uncertain, −tolerance between uncertain and obstructed, 0 when one step
+jumps straight from visible to obstructed. If there is no sign change, the midpoint of the step is
+used and the window says so. Times are reported to the minute. `tests/regression.js` checks the
+refined times against a 1-minute-step run (worst difference 0.59 min on the demo slip scenario).
