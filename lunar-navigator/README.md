@@ -24,8 +24,14 @@ for the number that changed most), and **Explore freely** for the full editable 
 Default thresholds follow the V0.2 change specification: Sun visible ≥ 60%, longest Sun obstruction ≤ 72 h,
 Earth visible ≥ 50%, longest gap without Earth ≤ 96 h, battery ≥ 10% above its 20% floor.
 
-The timeline's **Show windows** lists every visible, uncertain and obstructed window per scenario with
-start, end and duration (V1 specification 6.3).
+In the workspace:
+
+- **Show windows** (timeline) lists every visible, uncertain and obstructed window per scenario, with
+  start and end refined between samples to the minute (V1 specification 6.3 and 3.2).
+- **Sampling interval** (timeline): 5, 10 or 30 minutes for all scenarios.
+- **Export** (header): samples.csv, windows.csv, or the comparison as JSON.
+- **Pole map**: click a site for its details and to use it in a scenario.
+- **Validation** (header): 12 checks; three run live in the browser with **Run now**.
 
 Verdicts are *meets / needs review / does not meet / unknown*, never "feasible". "Needs review" always
 says why: terrain, close to threshold, both, grazing samples, or default assumptions.

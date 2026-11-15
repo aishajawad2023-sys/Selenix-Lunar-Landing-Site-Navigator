@@ -115,23 +115,40 @@
   const snum = (res, k, body, field, text) => num({ kind: 'sample', res, k, body, field }, text);
 
   // ---------------------------------------------------------------- chips, demo bar, banner
-  function selfTest() {
-    let worst = 0, mism = 0;
-    const hw = D.hardware.defaults;
+  // Checks that can run in the browser. They run on load and again from the validation panel ("Run now").
+  const LIVE_IDS = ['regression', 'missing-terrain', 'azimuth-geometry'];
+  const OFFLINE_CMD = { horizons: 'python precompute/horizons_check.py (needs network access to ssd.jpl.nasa.gov)', 'illumination-benchmark': 'python precompute/benchmark_illumination.py --dem-dir DEMS --illum-dir ILLUM',
+    'polar-sun': 'python precompute/validate.py', 'polar-earth': 'python precompute/validate.py', libration: 'python precompute/validate.py', 'azimuth-dem': 'python precompute/validate.py',
+    'terrain-sanity': 'python precompute/validate.py', coordinates: 'python precompute/validate.py', 'kernel-coverage': 'python precompute/validate.py' };
+  function liveChecks() {
+    const t0 = performance.now(), hw = D.hardware.defaults, out = {};
+    let worst = 0, mism = 0, nS = 0;
     for (const r of D.reference) {
       const site = D.sites.find(s => s.id === r.scenario.siteId);
       const run = E.simulate({ geometry, terrain: E.HorizonMaskAdapter(D.horizons[r.scenario.siteId]), site, scenario: r.scenario, hw, config: CFG });
       for (const smp of r.samples) {
-        const k = smp.k, s = run.series;
+        const k = smp.k, s = run.series; nS++;
         worst = Math.max(worst, Math.abs(s.sunEl[k] - smp.sunEl), Math.abs(s.earthEl[k] - smp.earthEl), Math.abs(((s.sunAz[k] - smp.sunAz + 540) % 360) - 180));
         if (E.STATE_NAME[s.sunState[k]] !== smp.sunState || E.STATE_NAME[s.earthState[k]] !== smp.earthState) mism++;
       }
     }
-    return { worst, mism, ok: worst < 1e-9 && !mism };
+    out.regression = { status: worst < 1e-9 && !mism ? 'pass' : 'fail', detail: `${D.reference.length} reference scenarios, ${nS} samples: worst angle difference ${worst.toExponential(1)}°, ${mism} state mismatches` };
+    const noT = D.sites.find(s => !D.horizons[s.id]);
+    if (noT) {
+      const run = E.simulate({ geometry, terrain: null, site: noT, scenario: { startUtc: '2027-08-11T12:00:00Z', durationDays: 10 }, hw, config: CFG });
+      const vis = [...run.series.sunState, ...run.series.earthState].filter(x => x === E.VISIBLE).length;
+      out['missing-terrain'] = { status: vis === 0 ? 'pass' : 'fail', detail: `${noT.name} has no terrain data: ${vis} of ${run.series.n * 2} Sun and Earth samples classified visible` };
+    }
+    const fr = E.siteFrame({ lat: -88, lon: 40, elevationM: 0 }), c = Math.cos(0.01), sn = Math.sin(0.01), R = E.R_MOON_KM;
+    const az = E.azEl([0, 1, 2].map(j => (fr.up[j] * c + fr.east[j] * sn) * R), fr).az;
+    out['azimuth-geometry'] = { status: Math.abs(az - 90) < 0.01 ? 'pass' : 'fail', detail: `a point placed due east reads ${az.toFixed(3)}°` };
+    const ms = performance.now() - t0, when = new Date().toISOString().slice(11, 19);
+    for (const k of Object.keys(out)) out[k].detail += ` (run in this browser at ${when} UTC, ${ms.toFixed(0)} ms)`;
+    return out;
   }
-  const ST = selfTest();
+  let LIVE = liveChecks();
   function checks() {
-    return D.validation.checks.map(c => c.id === 'regression' ? { ...c, status: ST.ok ? 'pass' : 'fail', detail: `run just now in this browser: ${D.reference.length} reference scenarios, worst angle difference ${ST.worst.toExponential(1)}°, ${ST.mism} state mismatches` } : c);
+    return D.validation.checks.map(c => LIVE[c.id] ? { ...c, ...LIVE[c.id], live: true } : { ...c, offline: OFFLINE_CMD[c.id] || 'python precompute/validate.py' });
   }
   function renderChips() {
     const cs = checks(), pass = cs.filter(c => c.status === 'pass').length, fail = cs.filter(c => c.status === 'fail').length;
@@ -624,7 +641,8 @@
     if (name === 'validation') {
       const cs = checks(), bm = D.validation.benchmark, hz = D.validation.horizonsCheck;
       return drawer('Validation', `<p class="muted">${cs.filter(c => c.status === 'pass').length} of ${cs.length} checks passed. A failing or not-run check is shown here and in the banner, never hidden.</p>
-        ${cs.map(c => `<div class="check"><span class="status ${c.status === 'pass' ? 'st-meets' : c.status === 'fail' ? 'st-fail' : 'st-unknown'}" style="padding:2px;height:18px">${c.status === 'pass' ? IC.meets : c.status === 'fail' ? IC.fail : IC.unknown}</span><div><b>${esc(c.name)}</b>${c.status === 'not-run' ? ' <span class="qc">not run</span>' : ''}<br>${esc(c.detail)}${c.tolerance ? `<br><span class="muted small">Tolerance: ${esc(c.tolerance)}</span>` : ''}</div></div>`).join('')}
+        <div class="row" style="margin:10px 0 4px;align-items:center"><button class="btn sm primary" data-act="rerun">Run now</button><span class="small muted">Reruns the ${LIVE_IDS.length} checks that can run in the browser. The others need NASA data or network access, so they run offline when the data is built (${esc(D.builtUtc.slice(0, 10))}).</span></div>
+        ${cs.map(c => `<div class="check"><span class="status ${c.status === 'pass' ? 'st-meets' : c.status === 'fail' ? 'st-fail' : 'st-unknown'}" style="padding:2px;height:18px">${c.status === 'pass' ? IC.meets : c.status === 'fail' ? IC.fail : IC.unknown}</span><div><b>${esc(c.name)}</b> <span class="qc">${c.live ? 'live' : 'offline'}</span>${c.status === 'not-run' ? ' <span class="qc">not run</span>' : ''}<br>${esc(c.detail)}${c.tolerance ? `<br><span class="muted small">Tolerance: ${esc(c.tolerance)}</span>` : ''}${c.offline ? `<br><span class="muted small">Rerun offline: <span class="mono">${esc(c.offline)}</span></span>` : ''}</div></div>`).join('')}
         ${bm ? `<dl><dt>Illumination benchmark detail</dt><dd>Reference: <a href="${esc(bm.referenceUrl)}" target="_blank" rel="noopener">NASA GSFC PGDA product 69</a> (Mazarico et al. 2011 method). Differences come from: ${esc(bm.differencesFrom)}.
           <table style="margin-top:6px"><tr><th>Near field</th><th>Sun median</th><th>Sun RMS</th><th>Earth median</th><th>Earth RMS</th></tr>${Object.entries(bm.nearFieldSensitivity).map(([k, v]) => `<tr><td>${k} m${+k === bm.nearFieldM ? ' (used)' : ''}</td><td>${v.sun.medianAbs}</td><td>${v.sun.rms}</td><td>${v.earth.medianAbs}</td><td>${v.earth.rms}</td></tr>`).join('')}</table>
           <span class="muted small">Differences in percentage points over ${bm.sun.all.n} points. The near-field setting matters because at grazing Sun angles metre-scale relief within a few DEM cells dominates the horizon on ridge crests.</span></dd>
@@ -764,6 +782,7 @@
       if (a === 'goreq') { state.mode = 'free'; closeDrawer(); renderAll(); const el = document.querySelector('[data-rf]'); return el && el.scrollIntoView({ block: 'center' }); }
       if (a === 'theme') { state.theme = state.theme === 'dark' ? 'light' : 'dark'; return renderAll(); }
       if (a === 'export') return exportJSON();
+      if (a === 'rerun') { LIVE = liveChecks(); renderChips(); renderBanner(); openPanel('validation'); const f = LIVE_IDS.filter(id => LIVE[id] && LIVE[id].status === 'fail'); return toast(f.length ? `${f.length} live check${f.length > 1 ? 's' : ''} failed` : `${LIVE_IDS.length} live checks passed`); }
       if (a === 'csv-samples') { download(`selenix-samples-${stamp()}.csv`, samplesCsv()); return toast('samples.csv downloaded'); }
       if (a === 'csv-windows') { download(`selenix-windows-${stamp()}.csv`, windowsCsv()); return toast('windows.csv downloaded'); }
       if (a === 'play') { if (playing) stopPlay(); else { if (state.cursorH >= tl.maxH) state.cursorH = 0; playing = setInterval(() => { state.cursorH = Math.min(tl.maxH, state.cursorH + 1); renderLive(); if (state.cursorH >= tl.maxH) { stopPlay(); const pb = document.querySelector('[data-act=play]'); if (pb) pb.textContent = '▶ Play'; } }, 70); } t.textContent = playing ? '❚❚ Pause' : '▶ Play'; return; }

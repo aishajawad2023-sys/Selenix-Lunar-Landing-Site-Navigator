@@ -74,7 +74,19 @@ Status of every item in the change specification and the consolidated improvemen
 | Item | Disposition |
 |---|---|
 | "Mark verified" / "change source" actions in the site table (5.7) | Dropped: no site is left to verify. Sources are in `data/sites.json` |
-| "Run now" buttons on validation checks | Not applicable in a static build: Horizons and the benchmark need network and DEM access, so they run offline and their results are shipped. The browser regression does run live |
+| "Run now" buttons on validation checks | Done for the three checks that can run in a browser (engine vs Python reference, missing terrain, azimuth convention); they also run on load. The other nine need NASA data or network access, so each is labelled offline with its date and the command that reruns it |
 | Rehearsal on a projector with an unfamiliar viewer (6.5) | For the team. Layout verified at 1920×1080 with no horizontal scroll |
 | "What this tool does not claim" preserved verbatim from V0.1 | The V0.1 text was not available here; the block states the same three points plus the V1 non-goals. Replace with the exact wording if required |
 | Power, RF, thermal, relay, 3D globe, accounts | Out of scope by both specifications. Power stays as a labelled estimate |
+
+## Added after V0.2
+
+| Item | Status |
+|---|---|
+| Visibility and obstruction windows with start and end times (V1 spec 6.3) | Done. Timeline → Show windows; per-window evidence; click a start to move the cursor |
+| Transition-time refinement (V1 spec 3.2) | Done. Bisection between samples, reported to the minute; documented in INTERFACES.md §7; tested against a 1-min run |
+| Sampling interval presets (V1 spec 6.1) | Done. 5 / 10 / 30 min, shared by all scenarios |
+| CSV export (V1 spec 2.3) | Done. Header → Export: samples.csv, windows.csv, comparison JSON |
+| Clickable pole map | Done. Site panel with "Use for scenario" and undo |
+| Default thresholds | Change-spec set: 60% Sun, 72 h obstruction, 50% Earth, 96 h Earth gap; battery 10% above its 20% floor |
+| Tagline | "Navigate lunar data. Plan with confidence." Headline stays "Plan lunar missions with greater clarity." |
