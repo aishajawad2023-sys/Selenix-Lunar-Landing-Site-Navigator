@@ -224,3 +224,13 @@ canvas { display: block; width: 100%; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; z-index: 70; font-size: 13px; display: flex; gap: 12px; align-items: center; }
 .toast button { font: inherit; background: none; border: none; color: var(--blue-strong); font-weight: 700; cursor: pointer; }
 @media (max-width: 640px) { .top, .demobar, main, .banner { padding-left: 16px; padding-right: 16px; } .demobar { position: static; } .kv { grid-template-columns: 1fr; } }
+
+/* windows table */
+.wtab { max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.wtab table { font-size: 13px; }
+.wtab th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.wtab td, .wtab th { padding: 5px 9px; }
+.wtab tr.cur td { background: color-mix(in srgb, var(--blue) 14%, transparent); }
+.wtab .lk { vertical-align: -1px; margin-right: 4px; }
+.jump { font: inherit; background: none; border: none; padding: 0; color: var(--blue); cursor: pointer; font-variant-numeric: tabular-nums; }
+.jump:hover { text-decoration: underline; }

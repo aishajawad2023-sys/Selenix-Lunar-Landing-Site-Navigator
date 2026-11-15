@@ -1,13 +1,13 @@
 {
   "marginPct": 10,
-  "note": "Default thresholds are illustrative user assumptions (quality class user-assumption). Edit here or in the app; no code change needed.",
+  "note": "Defaults follow the V0.2 change specification (section 12): 60% Sun, 72 h longest Sun obstruction, 50% Earth, 96 h Earth gap; battery stated as a 10% margin above the 20% floor. All are user assumptions, editable in the app or here.",
   "requirements": [
     {
       "id": "REQ-SUN",
       "label": "Sun-visible share",
       "metric": "sunlitPct",
       "op": ">=",
-      "threshold": 70,
+      "threshold": 60,
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": false,
@@ -19,7 +19,7 @@
       "label": "Longest Sun obstruction",
       "metric": "longestDarkGapH",
       "op": "<=",
-      "threshold": 50,
+      "threshold": 72,
       "unit": "h",
       "visibilityDependent": true,
       "powerDependent": false,
@@ -31,7 +31,7 @@
       "label": "Earth-visible share",
       "metric": "earthVisiblePct",
       "op": ">=",
-      "threshold": 40,
+      "threshold": 50,
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": false,
@@ -43,7 +43,7 @@
       "label": "Longest gap without Earth",
       "metric": "longestNoEarthGapH",
       "op": "<=",
-      "threshold": 72,
+      "threshold": 96,
       "unit": "h",
       "visibilityDependent": true,
       "powerDependent": false,
@@ -59,7 +59,7 @@
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": true,
-      "rationale": "Minimum charge stays at least 10% of capacity above the DoD floor; 0 means brownout.",
+      "rationale": "Minimum charge stays at least 10% of capacity above the 20% depth-of-discharge floor (i.e. never below 30% charge). The change-spec '20% battery' is the floor itself, so it is expressed here as a margin above it; 0 means the battery reached the floor.",
       "short": "battery margin"
     }
   ]

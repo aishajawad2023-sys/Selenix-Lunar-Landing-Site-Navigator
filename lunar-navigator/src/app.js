@@ -100,7 +100,7 @@
 
   // ---------------------------------------------------------------- evidence registry
   let EV = {}, evN = 0;
-  const CLASS_OF = ev => ev.kind === 'indicator' ? ev.rec.classification : ev.kind === 'input' ? 'user-assumption' : ev.kind === 'proof' ? (E.METRICS[ev.proof.metric] || {}).q || 'computed-geometry' : ev.kind === 'model-sample' ? 'engineering-estimate' : ev.kind === 'measured' ? 'measured' : 'computed-geometry';
+  const CLASS_OF = ev => ev.kind === 'window' ? 'computed-geometry' : ev.kind === 'indicator' ? ev.rec.classification : ev.kind === 'input' ? 'user-assumption' : ev.kind === 'proof' ? (E.METRICS[ev.proof.metric] || {}).q || 'computed-geometry' : ev.kind === 'model-sample' ? 'engineering-estimate' : ev.kind === 'measured' ? 'measured' : 'computed-geometry';
   function reg(ev) { const k = 'e' + (evN++); EV[k] = ev; return k; }
   function num(ev, text) { return `<button class="num" data-ev="${reg(ev)}" title="${CLASS_OF(ev)} · click for evidence">${esc(text)}</button>`; }
   function mnum(res, id, opts = {}) {
@@ -290,8 +290,8 @@
       <div class="legend"><span><i class="lk" style="background:var(--sun)"></i>Sun visible</span><span><i class="lk" style="background:var(--earth)"></i>Earth visible</span><span><i class="lk hatch" style="color:var(--text-2)"></i>uncertain (within ${CFG.toleranceDeg}° of the limit)</span><span>empty = obstructed</span><span>lines: battery charge (est.)</span></div>
       <div class="chartbox"><canvas id="tl-canvas" aria-label="Sun and Earth visibility states and estimated battery charge per scenario over mission-elapsed time"></canvas></div>
       <div class="cursor-row"><button class="btn sm" data-act="play" title="Animate the mission time">${playing ? '❚❚ Pause' : '▶ Play'}</button><input type="range" id="cursor" min="0" max="${maxH}" step="${1 / 6}" value="${state.cursorH}" aria-label="Mission time cursor"><span class="mono" id="cursor-lbl"></span>
-        <button class="more" data-act="readout">${state.readoutOpen ? 'Hide angles' : 'Show angles'}</button></div>
-      <div class="readout" id="readout"></div></section>`;
+        <button class="more" data-act="readout">${state.readoutOpen ? 'Hide angles' : 'Show angles'}</button><button class="more" data-act="windows">${state.windowsOpen ? 'Hide windows' : 'Show windows'}</button></div>
+      <div class="readout" id="readout"></div><div id="windows"></div></section>`;
   }
   function drawTimeline(hoverH) {
     const cv = $('#tl-canvas'); if (!cv || !tl) return;
@@ -358,6 +358,24 @@
       return `<div class="r" style="--c:var(${CV[res.i]})"><b>${res.name}</b> · ${utc} UTC · Sun <b>${snum(res, i, 'sun', 'state', stS)}</b>, ${next(sv, s.sunState[i] === E.VISIBLE, 'sunset', 'sunrise')}<br>
         Earth <b>${snum(res, i, 'earth', 'state', stE)}</b>, ${next(ev, s.earthState[i] === E.VISIBLE, 'Earthset', 'Earthrise')} · battery ${num({ kind: 'model-sample', res, k: i }, (100 * s.soc[i] / state.hw.batteryWh).toFixed(0) + '%')}<span class="est">est.${state.hw.confirmed ? '' : ', default panel'}</span>${ang}</div>`;
     }).join('');
+  }
+
+  // ---------------------------------------------------------------- visibility windows
+  const utcAt = (res, h) => new Date(res.run.series.t0 + h * 3600000).toISOString().slice(0, 16).replace('T', ' ');
+  function renderWindows() {
+    const el = $('#windows'); if (!el || !tl) return;
+    if (!state.windowsOpen) { el.innerHTML = ''; return; }
+    const body = state.windowBody || 'sun', o = ok(), col = body === 'sun' ? 'var(--sun)' : 'var(--earth)';
+    const key = st => st === 'visible' ? `<i class="lk" style="background:${col}"></i>` : st === 'uncertain' ? `<i class="lk hatch" style="color:${col}"></i>` : '<i class="lk" style="background:var(--surface-3);outline:1px solid var(--border-2)"></i>';
+    const rows = o.map(res => res.run.windows[body].map(w => {
+      const cur = state.cursorH >= w.startH && (state.cursorH < w.startH + w.durationH);
+      return `<tr class="${cur ? 'cur' : ''}"><td><span class="sw" style="--c:var(${CV[res.i]});margin-right:6px"></span>${res.name}</td><td>${key(w.state)} ${w.state}</td>
+        <td><button class="jump" data-jump="${w.startH}" title="Move the cursor here">T+${E.fmtHours(w.startH)}</button> <span class="muted small">${utcAt(res, w.startH)}</span></td>
+        <td>T+${E.fmtHours(w.endH)} <span class="muted small">${utcAt(res, w.endH)}</span></td>
+        <td>${num({ kind: 'window', res, w, body }, E.fmtHours(w.durationH))}</td></tr>`; }).join('')).join('');
+    el.innerHTML = `<div class="wins"><div class="tabs" style="margin:10px 0 6px"><button class="btn sm" data-wb="sun" aria-pressed="${body === 'sun'}">Sun windows</button><button class="btn sm" data-wb="earth" aria-pressed="${body === 'earth'}">Earth windows</button>
+      <span class="small muted">Start and end are known to within one ${CFG.stepMin}-min sample. Summary gaps count uncertain windows as not visible. Click a start time to move the cursor.</span></div>
+      <div class="tablewrap wtab"><table><thead><tr><th>Scenario</th><th>State</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   }
 
   // ---------------------------------------------------------------- horizon view
@@ -573,6 +591,19 @@
         <dt>Result record</dt><dd><table>${Object.entries(sr).map(([k, v]) => `<tr><td class="muted">${esc(k)}</td><td class="mono">${esc(typeof v === 'number' ? Math.round(v * 1e5) / 1e5 : v)}</td></tr>`).join('')}</table></dd>
         <dt>Validation</dt><dd>${valRefs(['horizons', 'regression'])}</dd></dl>` + copyBtn(sr));
     }
+    if (ev.kind === 'window') {
+      const { res, w, body } = ev, B = body === 'sun' ? 'Sun' : 'Earth', s = res.run.series, tol = CFG.toleranceDeg;
+      const q = res.run.geometryOnly ? 'limited' : w.state === 'uncertain' ? 'uncertain' : 'supported';
+      const limit = body === 'sun' ? 'the terrain horizon at the Sun azimuth' : `the higher of the terrain horizon and the ${state.hw.minEarthElevDeg}° minimum antenna elevation`;
+      const rec = { scenario: res.name, scenarioHash: E.scenarioId(res.run), body, state: w.state, startMetH: w.startH, endMetH: w.endH, durationH: w.durationH, samples: w.samples, stepMin: s.stepMin,
+        startUtc: utcAt(res, w.startH) + 'Z', endUtc: utcAt(res, w.endH) + 'Z', toleranceDeg: tol, site: res.site.id, terrain: res.run.geometryOnly ? null : 'horizon_' + res.site.id, method: E.CODE_VERSION };
+      return drawer('Evidence', `${head('Geometry-derived result', `${B} ${w.state} window · scenario ${res.name}`, E.fmtHours(w.durationH), '', 'computed-geometry', `<span class="qc">${q}</span>`)}<dl>
+        <dt>Window</dt><dd>From T+${E.fmtHours(w.startH)} (${rec.startUtc.replace('Z', '')} UTC) to T+${E.fmtHours(w.endH)} (${rec.endUtc.replace('Z', '')} UTC): ${w.samples} consecutive sample${w.samples > 1 ? 's' : ''} of ${s.stepMin} min.</dd>
+        <dt>How it is classified</dt><dd>${B} centre compared with ${limit}: visible above it by more than ${tol}°, obstructed below it by more than ${tol}°, otherwise uncertain.${res.run.geometryOnly ? ' Terrain is unavailable for this site, so no sample can be visible.' : ''}</dd>
+        <dt>Timing precision</dt><dd>The change of state happens somewhere between the last sample in one state and the first in the next, so start and end are known to within ${s.stepMin} min. The duration counts samples × step, the same accounting as the summary metrics.</dd>
+        <dt>Site and terrain</dt><dd>${esc(res.site.name)} · ${res.run.geometryOnly ? 'terrain unavailable' : esc(res.run.terrain.rec.uploaded ? 'user-supplied mask' : 'LOLA ' + res.run.terrain.rec.dem.product)}</dd>
+        <dt>Validation</dt><dd>${valRefs(['horizons', 'regression', 'illumination-benchmark'])}</dd>${repro('window', rec.scenarioHash)}</dl>` + copyBtn(rec));
+    }
     if (ev.kind === 'measured') {
       const s = ev.site, p = ev.p;
       return drawer('Evidence', `${head('Source data', ev.label, ev.text, '', p ? 'measured' : (s.coordStatus === 'user-entered' ? 'user-assumption' : 'measured'), `<span class="qc">${esc(p ? 'published product' : s.coordStatus || 'user-entered')}</span>`)}<dl>
@@ -640,9 +671,9 @@
       + `<div class="cols"><div class="col">${verdictsHtml()}${diffHtml()}</div><div class="col">${timelineHtml()}${horizonHtml()}</div></div>${logHtml()}`
       + (free || b === 5 ? sweepHtml() : '') + (free ? reqEditorHtml() + sitesHtml() : '');
     $('#app').innerHTML = h;
-    renderFoot(); drawTimeline(); renderReadout(); save();
+    renderFoot(); drawTimeline(); renderReadout(); renderWindows(); save();
   }
-  function renderLive() { drawTimeline(); renderReadout(); const hc = $('#horizon-card'); if (hc) hc.innerHTML = horizonInner(); const c = $('#cursor'); if (c) c.value = state.cursorH; }
+  function renderLive() { drawTimeline(); renderReadout(); renderWindows(); const hc = $('#horizon-card'); if (hc) hc.innerHTML = horizonInner(); const c = $('#cursor'); if (c) c.value = state.cursorH; }
   function whyTarget() {
     const o = ok(); if (!o.length) return null;
     const cur = o[o.length - 1];
@@ -656,7 +687,7 @@
   // ---------------------------------------------------------------- events
   let maskSite = null;
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
+    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
     if (!t) { if (!e.target.closest('#drawer') && e.target.id !== 'tl-canvas') closeDrawer(); return; }
     if (t.dataset.ev) return openEvidence(EV[t.dataset.ev]);
     if (t.dataset.copyev) return copy(JSON.stringify(EV[t.dataset.copyev].obj, null, 2), 'Record copied');
@@ -676,6 +707,7 @@
       if (a === 'theme') { state.theme = state.theme === 'dark' ? 'light' : 'dark'; return renderAll(); }
       if (a === 'export') return exportJSON();
       if (a === 'play') { if (playing) stopPlay(); else { if (state.cursorH >= tl.maxH) state.cursorH = 0; playing = setInterval(() => { state.cursorH = Math.min(tl.maxH, state.cursorH + 1); renderLive(); if (state.cursorH >= tl.maxH) { stopPlay(); const pb = document.querySelector('[data-act=play]'); if (pb) pb.textContent = '▶ Play'; } }, 70); } t.textContent = playing ? '❚❚ Pause' : '▶ Play'; return; }
+      if (a === 'windows') { state.windowsOpen = !state.windowsOpen; t.textContent = state.windowsOpen ? 'Hide windows' : 'Show windows'; return renderWindows(); }
       if (a === 'readout') { state.readoutOpen = !state.readoutOpen; t.textContent = state.readoutOpen ? 'Hide angles' : 'Show angles'; return renderReadout(); }
       if (a === 'allsites') { state.showAllSites = !state.showAllSites; return renderAll(); }
       if (a === 'advanced') { state.showAdvanced = !state.showAdvanced; return renderAll(); }
@@ -687,6 +719,8 @@
       state.scenarios = state.scenarios.slice(0, MAX_SCEN);
       return renderAll();
     }
+    if (t.dataset.jump !== undefined) { stopPlay(); state.cursorH = +t.dataset.jump; return renderLive(); }
+    if (t.dataset.wb) { state.windowBody = t.dataset.wb; return renderWindows(); }
     if (t.dataset.hz !== undefined) { state.horizonIdx = +t.dataset.hz; return renderLive(); }
     if (t.dataset.hm) { state.heatMetric = t.dataset.hm; return renderAll(); }
     if (t.dataset.layer) { state.mapLayer = t.dataset.layer; return renderAll(); }

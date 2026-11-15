@@ -13,13 +13,19 @@ Pipeline: scenario inputs → time generation → **geometry adapter** (SPICE) �
 | Step | What appears | Result with the default data |
 |---|---|---|
 | 1 Briefing | Mission, site, date, assumed hardware, requirements. Nothing calculated. | |
-| 2 Baseline | Scenario A: Mons Mouton (IM-2 Athena site), 11 Aug 2027 12:00 UTC, 10 days | Sun visible 100%, Earth in view 68%; 3 requirements met, 2 in review |
+| 2 Baseline | Scenario A: Mons Mouton (IM-2 Athena site), 11 Aug 2027 12:00 UTC, 10 days | Sun visible 100%, Earth in view 68%; all four visibility requirements met; battery margin in review until the hardware values are confirmed |
 | 3 Slip | Scenario B: same site, 21 days later | Sun visible 43%, Earth 6.4%; lands in darkness until T+5 d 16 h; estimated battery reaches its floor at T+27 h; 5 not met |
 | 4 Alternative | Scenario C: Connecting Ridge on the slipped date | Sun visible 100%, Earth 0%: no direct-to-Earth geometry |
 | 5 Decide | Trade-off table and date sweep. No winner is picked. | Delaying to 7 Sep 2027 restores the baseline conditions at the original site |
 
 Controls stay visible throughout: **Reset demo**, **Next step**, **Show me why** (opens the evidence
 for the number that changed most), and **Explore freely** for the full editable workspace.
+
+Default thresholds follow the V0.2 change specification: Sun visible ≥ 60%, longest Sun obstruction ≤ 72 h,
+Earth visible ≥ 50%, longest gap without Earth ≤ 96 h, battery ≥ 10% above its 20% floor.
+
+The timeline's **Show windows** lists every visible, uncertain and obstructed window per scenario with
+start, end and duration (V1 specification 6.3).
 
 Verdicts are *meets / needs review / does not meet / unknown*, never "feasible". "Needs review" always
 says why: terrain, close to threshold, both, grazing samples, or default assumptions.

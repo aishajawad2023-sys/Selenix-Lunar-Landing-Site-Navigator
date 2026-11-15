@@ -178,10 +178,15 @@
     for (let i = Math.max(from, 0) + 1; i < arr.length; i++) if (arr[i - 1] === a && arr[i] === b) return (i - from) * dtH;
     return null;
   }
-  /** Continuous windows of equal state: [{state, startH, endH}] (sample-count accounting: each sample spans one step). */
+  /** Continuous windows of equal state: [{state, startH, endH, durationH, samples, startIdx, endIdx}].
+   *  startH = time of the first sample in the state; endH = time of the first sample in the next state
+   *  (capped at the last sample). durationH = samples x step, the same accounting as the summary metrics. */
   function intervals(states, dtH) {
     const out = []; let st = 0;
-    for (let i = 1; i <= states.length; i++) if (i === states.length || states[i] !== states[st]) { out.push({ state: STATE_NAME[states[st]], startH: st * dtH, endH: Math.min(i, states.length - 1) * dtH }); st = i; }
+    for (let i = 1; i <= states.length; i++) if (i === states.length || states[i] !== states[st]) {
+      out.push({ state: STATE_NAME[states[st]], startH: st * dtH, endH: Math.min(i, states.length - 1) * dtH, durationH: (i - st) * dtH, samples: i - st, startIdx: st, endIdx: i - 1 });
+      st = i;
+    }
     return out;
   }
   /** Minimum result record (V1 spec 8.3) for one sample and body. */

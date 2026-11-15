@@ -1,6 +1,6 @@
 # SELENIX
 
-**Navigate lunar data. Plan with clarity.**
+**Navigate lunar data. Plan with confidence.**
 
 SELENIX is a lunar mission-planning and analysis prototype (NASA Space Apps 2026). It compares
 lunar south-pole landing sites and dates: when the Sun and Earth are visible above the real terrain,
