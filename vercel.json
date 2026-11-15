@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "",
+  "outputDirectory": "lunar-navigator/dist",
+  "cleanUrls": true,
+  "trailingSlash": true
+}

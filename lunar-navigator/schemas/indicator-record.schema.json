@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "selenix/indicator-record.schema.json",
+  "title": "Indicator record",
+  "description": "One derived value with its full lineage (handoff section 7 common data model). Produced by Engine.indicatorRecord and held in the indicator store.",
+  "type": "object",
+  "required": ["id", "metricId", "label", "value", "unit", "classification", "qualityState", "location", "time", "method", "inputs", "sources", "limitations", "scenarioHash", "codeVersion", "createdUtc"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^ind:[0-9a-f]{8}:[A-Za-z]+$", "description": "Stable identifier: ind:<scenarioHash>:<metricId>." },
+    "metricId": { "type": "string" },
+    "label": { "type": "string" },
+    "value": { "type": ["number", "null"] },
+    "unit": { "type": "string" },
+    "dataType": { "const": "number" },
+    "classification": { "enum": ["measured", "computed-geometry", "engineering-estimate", "user-assumption", "demo-only"] },
+    "qualityState": { "enum": ["supported", "limited", "uncertain", "unavailable"] },
+    "bounds": { "type": "object", "description": "Value if uncertain samples are counted as obstructed (conservative) or as visible (optimistic).", "properties": { "conservative": { "type": ["number", "null"] }, "optimistic": { "type": ["number", "null"] }, "note": { "type": "string" } } },
+    "uncertainSharePct": { "type": ["number", "null"] },
+    "worstCase": { "type": ["object", "null"], "properties": { "metH": { "type": "number" }, "utc": { "type": "string", "format": "date-time" }, "relation": { "enum": ["at", "from"] } } },
+    "location": { "type": "object", "required": ["siteId", "lat", "lon", "frame", "convention"], "properties": { "siteId": { "type": "string" }, "name": { "type": "string" }, "lat": { "type": "number", "minimum": -90, "maximum": 90 }, "lon": { "type": "number", "minimum": -180, "maximum": 180 }, "elevationM": { "type": ["number", "null"] }, "frame": { "const": "MOON_ME" }, "convention": { "type": "string" }, "coordStatus": { "type": "string" } } },
+    "time": { "type": "object", "required": ["startUtc", "endUtc", "standard", "stepSec"], "properties": { "startUtc": { "type": "string" }, "endUtc": { "type": "string" }, "standard": { "const": "UTC" }, "stepSec": { "type": "number" } } },
+    "method": { "type": "object", "required": ["id", "version", "description", "parameters"], "properties": { "id": { "type": "string" }, "version": { "type": "string" }, "description": { "type": "string" }, "parameters": { "type": "object" } } },
+    "inputs": { "type": "array", "items": { "type": "string" }, "description": "Identifiers of what this value was built from: adapter:<id>@<version>, product:<id>, scenario:<hash>, assumptions:hardware." },
+    "sources": { "type": "array", "items": { "type": "object", "required": ["id", "name"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "version": { "type": "string" }, "url": { "type": "string" } } } },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "validation": { "type": "object", "properties": { "refs": { "type": "array", "items": { "type": "string" }, "description": "Ids of checks in data/validation.json." } } },
+    "scenarioHash": { "type": "string" },
+    "codeVersion": { "type": "string" },
+    "createdUtc": { "type": "string", "format": "date-time" }
+  }
+}

@@ -30,6 +30,8 @@ jobs:
           python-version: "3.12"
       - name: Engine regression (JS vs Python reference)
         run: node lunar-navigator/tests/regression.js
+      - name: Rebuild static date sweep
+        run: node lunar-navigator/precompute/make_sweep.js
       - name: Build self-contained page
         run: python lunar-navigator/build.py
       - uses: actions/configure-pages@v5

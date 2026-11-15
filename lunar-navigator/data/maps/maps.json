@@ -1,0 +1,37 @@
+{
+ "px": 640,
+ "orientation": "polar stereographic, 0 deg E up, 90 deg E right",
+ "views": {
+  "region": {
+   "halfKm": 175.0,
+   "relief": "LDEM_80S_80M V2.0",
+   "published": "AVGVISIB_75S_120M_201608"
+  },
+  "pole": {
+   "halfKm": 30.0,
+   "relief": "LDEM_85S_40M V2.0",
+   "published": "AVGVISIB_85S_060M_201608"
+  }
+ },
+ "layers": {
+  "relief": {
+   "label": "Shaded relief",
+   "source": "LRO LOLA gridded DEM (PDS)",
+   "classification": "measured"
+  },
+  "sun": {
+   "label": "Average solar illumination",
+   "source": "NASA GSFC PGDA product 69 (Mazarico et al. 2011, 2016 update): share of time with any part of the Sun visible, 18.6-year average",
+   "classification": "measured",
+   "url": "https://pgda.gsfc.nasa.gov/products/69",
+   "scale": "dark = 0%, gold = 100%"
+  },
+  "earth": {
+   "label": "Average Earth visibility",
+   "source": "NASA GSFC PGDA product 69: share of time with any part of Earth visible, 18.6-year average",
+   "classification": "measured",
+   "url": "https://pgda.gsfc.nasa.gov/products/69",
+   "scale": "dark = 0%, blue = 100%"
+  }
+ }
+}

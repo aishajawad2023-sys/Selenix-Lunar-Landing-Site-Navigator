@@ -1,12 +1,74 @@
 [
-  { "id": "lola-ldem", "name": "LRO LOLA polar gridded DEMs LDEM_85S_40M, LDEM_80S_80M, LDEM_75S_120M", "version": "PDS3 V2.0 (2017-06-15)", "url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/", "qualityClass": "measured", "note": "Heights in m relative to a 1737.4 km sphere (DN × 0.5). Also distributed via PGDA (pgda.gsfc.nasa.gov) and PDS Geosciences." },
-  { "id": "naif-spice", "name": "NAIF SPICE kernels: naif0012.tls, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf, pck00011.tpc", "version": "CSPICE N0067 via spiceypy", "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/", "qualityClass": "computed-geometry" },
-  { "id": "horizons", "name": "JPL Horizons System (independent cross-check)", "version": "API 1.2, DE441", "url": "https://ssd.jpl.nasa.gov/horizons/", "qualityClass": "computed-geometry" },
-  { "id": "quickmap", "name": "LROC QuickMap (ASU): imagery and topography to inspect sites", "version": "web", "url": "https://quickmap.lroc.im-ldi.com/", "qualityClass": "measured" },
-  { "id": "moontrek", "name": "NASA Moon Trek: 3-D terrain to inspect sites and horizons", "version": "web", "url": "https://trek.nasa.gov/moon/", "qualityClass": "measured" },
-  { "id": "csa-moon", "name": "Canadian Space Agency: Moon exploration (Artemis, Canadarm3, lunar rover)", "version": "web", "url": "https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/", "qualityClass": "demo-only" },
-  { "id": "mazarico2011", "name": "Mazarico et al. (2011), Illumination conditions of the lunar polar regions using LOLA topography, Icarus 211", "version": "doi:10.1016/j.icarus.2010.10.030", "url": "https://doi.org/10.1016/j.icarus.2010.10.030", "qualityClass": "measured" },
-  { "id": "glaser2018", "name": "Gläser et al. (2018), Illumination conditions at the lunar poles: implications for future exploration, PSS 162", "version": "doi:10.1016/j.pss.2017.07.006", "url": "https://doi.org/10.1016/j.pss.2017.07.006", "qualityClass": "measured" },
-  { "id": "solar-constant", "name": "Total solar irradiance 1361 W/m² (Kopp & Lean 2011)", "version": "GRL 38", "url": "https://doi.org/10.1029/2010GL045777", "qualityClass": "measured" },
-  { "id": "isro-ch3", "name": "ISRO Chandrayaan-3 landing site (Shiv Shakti point)", "version": "2023", "url": "https://www.isro.gov.in/Chandrayaan3_Details.html", "qualityClass": "measured" }
+  {
+    "id": "lola-ldem",
+    "name": "LRO LOLA polar gridded DEMs LDEM_85S_40M, LDEM_80S_80M, LDEM_75S_120M",
+    "version": "PDS3 V2.0 (2017-06-15)",
+    "url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/",
+    "qualityClass": "measured",
+    "note": "Heights in m relative to a 1737.4 km sphere (DN × 0.5). Also distributed via PGDA (pgda.gsfc.nasa.gov) and PDS Geosciences."
+  },
+  {
+    "id": "pgda-illum",
+    "name": "NASA GSFC PGDA product 69: LOLA average solar illumination and Earth visibility maps (Mazarico et al. 2011, Icarus 211; 2016 update)",
+    "version": "AVGVISIB_85S_060M_201608, AVGVISIB_75S_120M_201608",
+    "url": "https://pgda.gsfc.nasa.gov/products/69",
+    "qualityClass": "measured",
+    "note": "Used as the illumination benchmark, for site coordinates and as map context layers."
+  },
+  {
+    "id": "naif-spice",
+    "name": "NAIF SPICE kernels: naif0012.tls, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf, pck00011.tpc",
+    "version": "CSPICE N0067 via spiceypy",
+    "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/",
+    "qualityClass": "computed-geometry"
+  },
+  {
+    "id": "horizons",
+    "name": "JPL Horizons System (independent cross-check)",
+    "version": "API 1.2, DE441",
+    "url": "https://ssd.jpl.nasa.gov/horizons/",
+    "qualityClass": "computed-geometry"
+  },
+  {
+    "id": "quickmap",
+    "name": "LROC QuickMap (ASU): imagery and topography to inspect sites",
+    "version": "web",
+    "url": "https://quickmap.lroc.im-ldi.com/",
+    "qualityClass": "measured"
+  },
+  {
+    "id": "moontrek",
+    "name": "NASA Moon Trek: 3-D terrain to inspect sites and horizons",
+    "version": "web",
+    "url": "https://trek.nasa.gov/moon/",
+    "qualityClass": "measured"
+  },
+  {
+    "id": "csa-moon",
+    "name": "Canadian Space Agency: Moon exploration (Artemis, Canadarm3, lunar rover)",
+    "version": "web",
+    "url": "https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/",
+    "qualityClass": "demo-only"
+  },
+  {
+    "id": "solar-constant",
+    "name": "Total solar irradiance 1361 W/m² (Kopp & Lean 2011)",
+    "version": "GRL 38",
+    "url": "https://doi.org/10.1029/2010GL045777",
+    "qualityClass": "measured"
+  },
+  {
+    "id": "isro-ch3",
+    "name": "ISRO Chandrayaan-3 landing site (Shiv Shakti point)",
+    "version": "2023",
+    "url": "https://www.isro.gov.in/Chandrayaan3_Details.html",
+    "qualityClass": "measured"
+  },
+  {
+    "id": "lroc-im2",
+    "name": "LROC: IM-2 Athena lander position (image 1408)",
+    "version": "2025",
+    "url": "https://lroc.im-ldi.com/images/1408",
+    "qualityClass": "measured"
+  }
 ]

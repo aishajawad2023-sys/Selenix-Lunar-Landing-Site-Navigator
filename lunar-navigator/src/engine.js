@@ -1,44 +1,75 @@
-/* Lunar Mission Decision-Support Navigator: engine.
- * Pure functions, no DOM. Works in the browser (window.Engine) and in Node (module.exports).
+/* SELENIX engine. Pure functions, no DOM. Browser: window.Engine. Node: module.exports.
  *
- * Conventions (fixed): frame MOON_ME, km; site on a sphere R = 1737.4 km + elevation;
- * azimuth 0 = local north, clockwise; UTC index (TDB = UTC + 69.184 s); visibility by disc centre;
- * no refraction. Power P = A*eta*1361*(1AU/r)^2*cos(incidence)*sunVisible*(1-losses).
+ * Pipeline: scenario inputs -> time generation -> geometry adapter (SPICE) -> local frame ->
+ * terrain adapter (LOLA horizon) -> visibility classification -> interval aggregation ->
+ * indicator records -> requirement proofs -> rule-based implications.
+ *
+ * Conventions (fixed): frame MOON_ME, km; site on a sphere R = 1737.4 km + elevation; planetocentric
+ * latitude, east-positive longitude in [-180, 180]; azimuth 0 = local north, clockwise; UTC index;
+ * apparent positions (LT+S); no refraction. Visibility is classified against the terrain horizon
+ * with a tolerance: visible / uncertain / obstructed. Interfaces: docs/INTERFACES.md, schemas/.
  */
 (function (root) {
   'use strict';
-  const R_MOON_KM = 1737.4;
-  const AU_KM = 149597870.7;
-  const SOLAR_CONSTANT = 1361;
+  const R_MOON_KM = 1737.4, AU_KM = 149597870.7, SOLAR_CONSTANT = 1361;
   const D2R = Math.PI / 180, R2D = 180 / Math.PI;
-  const CODE_VERSION = 'navigator-engine 1.0.0';
+  const CODE_VERSION = 'selenix-engine 2.0.0';
+  const OBSTRUCTED = 0, UNCERTAIN = 1, VISIBLE = 2;
+  const STATE_NAME = ['obstructed', 'uncertain', 'visible'];
+  const DEFAULT_CONFIG = { toleranceDeg: 0.27, stepMin: 10 };
+  const PANEL_TYPES = ['horizontal', 'vertical-fixed', 'vertical-tracking'];
 
-  // ---------- ephemeris ----------
-  function loadEphemeris(buffer, meta) {
+  // ---------------------------------------------------------------- adapters
+  /** Geometry adapter over the precomputed SPICE table. Same interface as precompute/adapters.py. */
+  function SpiceTableAdapter(buffer, meta) {
     const data = buffer instanceof Float32Array ? buffer : new Float32Array(buffer);
     if (data.length !== meta.count * meta.valuesPerRecord) throw new Error('ephemeris size mismatch');
-    return { data, t0: meta.startEpochMs, stepMs: meta.stepSec * 1000, count: meta.count, k: meta.valuesPerRecord, meta };
+    const t0 = meta.startEpochMs, stepMs = meta.stepSec * 1000, k = meta.valuesPerRecord, count = meta.count;
+    const src = meta.adapter || {};
+    const self = {
+      id: 'spice-table', kind: 'geometry', version: '2.0.0', meta,
+      describe() {
+        return { id: self.id, kind: self.kind, version: self.version, derivedFrom: src.id + ' ' + src.version,
+          provider: src.provider, sources: src.sources, sourceUrl: src.sourceUrl, toolkit: src.toolkit, frame: src.frame, frameNote: src.frameNote,
+          timeSystem: src.timeSystem, aberration: src.aberration, aberrationNote: src.aberrationNote,
+          sampling: `${meta.stepSec} s table, ${meta.interpolation}`, coverage: self.coverage(), generatedUtc: meta.generatedUtc };
+      },
+      coverage() { return { startUtc: new Date(t0).toISOString(), endUtc: new Date(t0 + (count - 1) * stepMs).toISOString(), startMs: t0, endMs: t0 + (count - 1) * stepMs }; },
+      vectors(tMs) {
+        const x = (tMs - t0) / stepMs, i = Math.floor(x);
+        if (i < 0 || i + 1 >= count) return null;
+        const f = x - i, a = i * k, b = a + k, v = new Array(6);
+        for (let j = 0; j < 6; j++) v[j] = data[a + j] * (1 - f) + data[b + j] * f;
+        return { sun: [v[0], v[1], v[2]], earth: [v[3], v[4], v[5]] };
+      },
+      query(site, tMs) {
+        const v = self.vectors(tMs); if (!v) return null;
+        const fr = site.pos ? site : siteFrame(site);
+        const s = azEl(v.sun, fr), e = azEl(v.earth, fr);
+        return { sun: { az: s.az, el: s.el, distKm: s.dist }, earth: { az: e.az, el: e.el, distKm: e.dist } };
+      },
+    };
+    return self;
   }
-  function ephRange(eph) { return [eph.t0, eph.t0 + (eph.count - 1) * eph.stepMs]; }
-  function ephAt(eph, tMs) {
-    const x = (tMs - eph.t0) / eph.stepMs;
-    const i = Math.floor(x);
-    if (i < 0 || i + 1 >= eph.count) return null;
-    const f = x - i, a = i * eph.k, b = a + eph.k, d = eph.data;
-    const v = new Array(6);
-    for (let j = 0; j < 6; j++) v[j] = d[a + j] * (1 - f) + d[b + j] * f;
-    return { sun: [v[0], v[1], v[2]], earth: [v[3], v[4], v[5]] };
+  /** Terrain adapter over one horizon_<siteId>.json record. Missing terrain is never a 0-degree horizon. */
+  function HorizonMaskAdapter(rec) {
+    if (!rec) return null;
+    const mask = rec.maskDeg;
+    return {
+      id: 'lola-horizon', kind: 'terrain', version: '2.0.0', rec,
+      describe() { return { id: 'lola-horizon', kind: 'terrain', product: rec.dem && rec.dem.product, version: rec.dem && rec.dem.version, resolutionM: rec.dem && rec.dem.resolutionM,
+        extentKm: rec.dem && rec.dem.extentKm, observerHeightM: rec.observerHeightM, azConvention: rec.azConvention, method: rec.method, userSupplied: !!rec.uploaded, sourceUrl: rec.dem && rec.dem.source }; },
+      horizonAt(az) { const a = ((az % 360) + 360) % 360, i = Math.floor(a), f = a - i; return mask[i % 360] * (1 - f) + mask[(i + 1) % 360] * f; },
+    };
   }
 
-  // ---------- geometry ----------
+  // ---------------------------------------------------------------- geometry
   function enu(latDeg, lonDeg) {
-    const la = latDeg * D2R, lo = lonDeg * D2R;
-    const cl = Math.cos(la), sl = Math.sin(la), co = Math.cos(lo), so = Math.sin(lo);
+    const la = latDeg * D2R, lo = lonDeg * D2R, cl = Math.cos(la), sl = Math.sin(la), co = Math.cos(lo), so = Math.sin(lo);
     return { east: [-so, co, 0], north: [-sl * co, -sl * so, cl], up: [cl * co, cl * so, sl] };
   }
   function siteFrame(site) {
-    const b = enu(site.lat, site.lon);
-    const r = R_MOON_KM + (site.elevationM || 0) / 1000;
+    const b = enu(site.lat, site.lon), r = R_MOON_KM + (site.elevationM || 0) / 1000;
     return { ...b, pos: [b.up[0] * r, b.up[1] * r, b.up[2] * r] };
   }
   function azEl(target, fr) {
@@ -49,209 +80,267 @@
     let az = Math.atan2(x, y) * R2D; if (az < 0) az += 360;
     return { az, el: Math.atan2(z, Math.hypot(x, y)) * R2D, dist: Math.hypot(v0, v1, v2) };
   }
-  function maskAt(mask, az) {
-    if (!mask) return 0;
-    const a = ((az % 360) + 360) % 360, i = Math.floor(a), f = a - i;
-    return mask[i % 360] * (1 - f) + mask[(i + 1) % 360] * f;
-  }
   function cosIncidence(panelType, sunAz, sunEl, panelAzDeg) {
     if (panelType === 'horizontal') return Math.max(0, Math.sin(sunEl * D2R));
     if (panelType === 'vertical-fixed') return Math.max(0, Math.cos(sunEl * D2R) * Math.cos((sunAz - panelAzDeg) * D2R));
-    return Math.max(0, Math.cos(sunEl * D2R)); // vertical-tracking
+    return Math.max(0, Math.cos(sunEl * D2R));
+  }
+  /** visible when el > threshold + tol; obstructed when el < threshold - tol; otherwise uncertain. */
+  function classify(el, threshold, tol) { return el > threshold + tol ? VISIBLE : (el < threshold - tol ? OBSTRUCTED : UNCERTAIN); }
+
+  // ---------------------------------------------------------------- simulation
+  function simulate({ geometry, terrain, site, scenario, hw, config }) {
+    const cfg = { ...DEFAULT_CONFIG, ...(config || {}) };
+    const stepMin = cfg.stepMin, tol = cfg.toleranceDeg;
+    const t0 = Date.parse(scenario.startUtc);
+    const n = Math.round(scenario.durationDays * 24 * 60 / stepMin), N = n + 1, dtH = stepMin / 60;
+    const cov = geometry.coverage();
+    if (!(t0 >= cov.startMs && t0 + n * stepMin * 60000 <= cov.endMs)) throw new Error(`Scenario time is outside the SPICE table coverage (${cov.startUtc.slice(0, 10)} to ${cov.endUtc.slice(0, 10)}).`);
+    const fr = siteFrame(site), hasMask = !!terrain;
+    const s = { n: N, stepMin, t0, sunAz: new Float64Array(N), sunEl: new Float64Array(N), earthAz: new Float64Array(N), earthEl: new Float64Array(N),
+      horizonSun: new Float64Array(N), horizonEarth: new Float64Array(N), sunDist: new Float64Array(N),
+      sunState: new Uint8Array(N), earthState: new Uint8Array(N), power: new Float64Array(N), soc: new Float64Array(N) };
+    for (let i = 0; i < N; i++) {
+      const v = geometry.vectors(t0 + i * stepMin * 60000);
+      const S = azEl(v.sun, fr), E = azEl(v.earth, fr);
+      s.sunAz[i] = S.az; s.sunEl[i] = S.el; s.earthAz[i] = E.az; s.earthEl[i] = E.el; s.sunDist[i] = S.dist;
+      const hS = hasMask ? terrain.horizonAt(S.az) : 0, hE = hasMask ? terrain.horizonAt(E.az) : 0;
+      s.horizonSun[i] = hS; s.horizonEarth[i] = hE;
+      let ss = classify(S.el, hS, tol), es = classify(E.el, Math.max(hE, hw.minEarthElevDeg), tol);
+      // No terrain data: a body above the reference horizon is uncertain, never visible.
+      if (!hasMask) { if (ss === VISIBLE) ss = UNCERTAIN; if (es === VISIBLE) es = UNCERTAIN; }
+      s.sunState[i] = ss; s.earthState[i] = es;
+    }
+    const conservative = aggregate(s, hw, n, dtH, VISIBLE);   // uncertain counted as not visible
+    const optimistic = aggregate(s, hw, n, dtH, UNCERTAIN);   // uncertain counted as visible
+    const primary = hasMask ? conservative : optimistic;
+    s.power = primary.series.power; s.soc = primary.series.soc;
+    const shared = {
+      sunUncertainPct: 100 * count(s.sunState, UNCERTAIN) / N, earthUncertainPct: 100 * count(s.earthState, UNCERTAIN) / N,
+      maxSunElDeg: max(s.sunEl), maxEarthElDeg: max(s.earthEl), durationH: n * dtH,
+    };
+    const windows = { sun: intervals(s.sunState, dtH), earth: intervals(s.earthState, dtH) };
+    return { series: s, metrics: { ...primary.metrics, ...shared }, bounds: { conservative: { ...conservative.metrics, ...shared }, optimistic: { ...optimistic.metrics, ...shared } },
+      windows, geometryOnly: !hasMask, qualityState: hasMask ? (shared.sunUncertainPct + shared.earthUncertainPct > 0 ? 'supported' : 'supported') : 'limited',
+      config: cfg, site, scenario, hw, terrain, geometry };
   }
 
-  // ---------- simulation ----------
-  const PANEL_TYPES = ['horizontal', 'vertical-fixed', 'vertical-tracking'];
-
-  function simulate({ eph, site, mask, scenario, hw, stepMin = 10 }) {
-    const t0 = Date.parse(scenario.startUtc);
-    const n = Math.round(scenario.durationDays * 24 * 60 / stepMin);
-    const N = n + 1, dtH = stepMin / 60;
-    const fr = siteFrame(site);
-    const s = {
-      n: N, stepMin, t0,
-      sunAz: new Float64Array(N), sunEl: new Float64Array(N), earthAz: new Float64Array(N), earthEl: new Float64Array(N),
-      horizonSun: new Float64Array(N), horizonEarth: new Float64Array(N),
-      sunVis: new Uint8Array(N), earthVis: new Uint8Array(N), power: new Float64Array(N), soc: new Float64Array(N),
-    };
-    const minE = hw.minEarthElevDeg;
+  function aggregate(s, hw, n, dtH, minState) {
+    const N = s.n, sunVis = new Uint8Array(N), earthVis = new Uint8Array(N), power = new Float64Array(N), soc = new Float64Array(N);
     const k = hw.panelAreaM2 * hw.efficiency * SOLAR_CONSTANT * (1 - hw.losses);
     const energy = { horizontal: 0, 'vertical-fixed': 0, 'vertical-tracking': 0 };
     const cap = hw.batteryWh, floor = cap * (1 - hw.dod);
-    let soc = cap * (hw.initialSocPct ?? 100) / 100, minSoc = soc, brownout = null;
-    let sunElSum = 0, sunElN = 0, maxEarthEl = -90;
+    let charge = cap * (hw.initialSocPct ?? 100) / 100, minSoc = charge, minAt = 0, brownout = null, elSum = 0, elN = 0;
     for (let i = 0; i < N; i++) {
-      const e = ephAt(eph, t0 + i * stepMin * 60000);
-      if (!e) throw new Error('Scenario time outside the ephemeris table (2026-2030).');
-      const S = azEl(e.sun, fr), E = azEl(e.earth, fr);
-      s.sunAz[i] = S.az; s.sunEl[i] = S.el; s.earthAz[i] = E.az; s.earthEl[i] = E.el;
-      const hS = maskAt(mask, S.az), hE = maskAt(mask, E.az);
-      s.horizonSun[i] = hS; s.horizonEarth[i] = hE;
-      const sv = S.el > hS ? 1 : 0, ev = E.el > Math.max(hE, minE) ? 1 : 0;
-      s.sunVis[i] = sv; s.earthVis[i] = ev;
-      if (ev) maxEarthEl = Math.max(maxEarthEl, E.el);
-      const flux = k * Math.pow(AU_KM / S.dist, 2) * sv;
-      if (sv) { sunElSum += S.el; sunElN++; }
+      const sv = s.sunState[i] >= minState ? 1 : 0;
+      sunVis[i] = sv; earthVis[i] = s.earthState[i] >= minState ? 1 : 0;
+      const flux = k * Math.pow(AU_KM / s.sunDist[i], 2) * sv;
+      if (sv) { elSum += s.sunEl[i]; elN++; }
       for (const pt of PANEL_TYPES) {
-        const p = flux * cosIncidence(pt, S.az, S.el, hw.panelAzDeg || 0);
-        if (pt === hw.panelType) s.power[i] = p;
+        const p = flux * cosIncidence(pt, s.sunAz[i], s.sunEl[i], hw.panelAzDeg || 0);
+        if (pt === hw.panelType) power[i] = p;
         if (i < n) energy[pt] += p * dtH;
       }
-      s.soc[i] = soc;
-      if (soc < minSoc) minSoc = soc;
+      soc[i] = charge;
+      if (charge < minSoc - 1e-9) { minSoc = charge; minAt = i * dtH; }
       if (i < n) {
-        soc = Math.min(cap, soc + (s.power[i] - hw.loadW) * dtH);
-        if (soc <= floor) { if (brownout === null) brownout = (i + 1) * dtH; soc = floor; }
+        charge = Math.min(cap, charge + (power[i] - hw.loadW) * dtH);
+        if (charge <= floor) { if (brownout === null) brownout = (i + 1) * dtH; charge = floor; }
       }
     }
-    if (soc < minSoc) minSoc = soc;
     const m = {};
-    m.sunlitPct = 100 * sum(s.sunVis) / N;
-    m.earthVisiblePct = 100 * sum(s.earthVis) / N;
-    m.longestDarkGapH = longestRun(s.sunVis, 0) * dtH;
-    m.longestNoEarthGapH = longestRun(s.earthVis, 0) * dtH;
-    m.sunlitAtStart = s.sunVis[0];
-    m.earthVisibleAtStart = s.earthVis[0];
-    m.timeToSunsetH = timeToTransition(s.sunVis, 0, 1, 0, dtH);
-    m.timeToSunriseH = timeToTransition(s.sunVis, 0, 0, 1, dtH);
-    m.timeToEarthsetH = timeToTransition(s.earthVis, 0, 1, 0, dtH);
-    m.timeToEarthriseH = timeToTransition(s.earthVis, 0, 0, 1, dtH);
-    m.energyWh = energy[hw.panelType];
-    m.energyHorizontalWh = energy.horizontal;
-    m.energyVerticalFixedWh = energy['vertical-fixed'];
-    m.energyVerticalTrackingWh = energy['vertical-tracking'];
+    m.sunlitPct = 100 * sum(sunVis) / N; m.earthVisiblePct = 100 * sum(earthVis) / N;
+    m.sunVisibleH = sum(sunVis) * dtH; m.earthVisibleH = sum(earthVis) * dtH;
+    const dg = longestRun(sunVis, 0), eg = longestRun(earthVis, 0);
+    m.longestDarkGapH = dg.len * dtH; m.longestDarkGapStartH = dg.len ? dg.start * dtH : null;
+    m.longestNoEarthGapH = eg.len * dtH; m.longestNoEarthGapStartH = eg.len ? eg.start * dtH : null;
+    m.sunlitAtStart = sunVis[0]; m.earthVisibleAtStart = earthVis[0];
+    m.timeToSunsetH = timeToTransition(sunVis, 0, 1, 0, dtH); m.timeToSunriseH = timeToTransition(sunVis, 0, 0, 1, dtH);
+    m.timeToEarthsetH = timeToTransition(earthVis, 0, 1, 0, dtH); m.timeToEarthriseH = timeToTransition(earthVis, 0, 0, 1, dtH);
+    m.energyWh = energy[hw.panelType]; m.energyHorizontalWh = energy.horizontal; m.energyVerticalTrackingWh = energy['vertical-tracking'];
     m.verticalToHorizontalRatio = energy.horizontal > 1e-9 ? energy['vertical-tracking'] / energy.horizontal : null;
-    m.loadEnergyWh = hw.loadW * n * dtH;
-    m.energyBalanceWh = m.energyWh - m.loadEnergyWh;
-    m.meanSunElDeg = sunElN ? sunElSum / sunElN : null;
+    m.loadEnergyWh = hw.loadW * n * dtH; m.energyBalanceWh = m.energyWh - m.loadEnergyWh;
+    m.meanSunElDeg = elN ? elSum / elN : null;
     m.shadowLengthM = m.meanSunElDeg > 0 ? 1 / Math.tan(m.meanSunElDeg * D2R) : null;
-    m.maxSunElDeg = Math.max(...s.sunEl);
-    m.maxEarthElDeg = maxEarthEl > -90 ? maxEarthEl : null;
-    m.minSocPct = 100 * minSoc / cap;
-    m.socMarginPct = m.minSocPct - 100 * (1 - hw.dod);
-    m.brownoutMetH = brownout;
-    m.requiredStorageWh = hw.loadW * m.longestDarkGapH / hw.dod;
-    m.durationH = n * dtH;
-    return { series: s, metrics: m };
+    m.minSocPct = 100 * minSoc / cap; m.minSocAtH = minAt; m.socMarginPct = m.minSocPct - 100 * (1 - hw.dod);
+    m.brownoutMetH = brownout; m.requiredStorageWh = hw.loadW * m.longestDarkGapH / hw.dod;
+    return { metrics: m, series: { sunVis, earthVis, power, soc } };
   }
   function sum(a) { let t = 0; for (let i = 0; i < a.length; i++) t += a[i]; return t; }
+  function max(a) { let t = -Infinity; for (let i = 0; i < a.length; i++) if (a[i] > t) t = a[i]; return t; }
+  function count(a, v) { let t = 0; for (let i = 0; i < a.length; i++) if (a[i] === v) t++; return t; }
   function longestRun(a, val) {
-    let best = 0, cur = 0;
-    for (let i = 0; i < a.length; i++) { cur = a[i] === val ? cur + 1 : 0; if (cur > best) best = cur; }
-    return best;
+    let best = 0, bestStart = 0, cur = 0;
+    for (let i = 0; i < a.length; i++) { if (a[i] === val) { cur++; if (cur > best) { best = cur; bestStart = i - cur + 1; } } else cur = 0; }
+    return { len: best, start: bestStart };
   }
-  /** Hours from step `from` until the first transition from `a` to `b` (null if none inside the mission). */
   function timeToTransition(arr, from, a, b, dtH) {
     for (let i = Math.max(from, 0) + 1; i < arr.length; i++) if (arr[i - 1] === a && arr[i] === b) return (i - from) * dtH;
     return null;
   }
+  /** Continuous windows of equal state: [{state, startH, endH}] (sample-count accounting: each sample spans one step). */
+  function intervals(states, dtH) {
+    const out = []; let st = 0;
+    for (let i = 1; i <= states.length; i++) if (i === states.length || states[i] !== states[st]) { out.push({ state: STATE_NAME[states[st]], startH: st * dtH, endH: Math.min(i, states.length - 1) * dtH }); st = i; }
+    return out;
+  }
+  /** Minimum result record (V1 spec 8.3) for one sample and body. */
+  function sampleRecord(run, k, body) {
+    const s = run.series, sun = body === 'sun';
+    return { scenario_id: scenarioId(run), timestamp: new Date(s.t0 + k * s.stepMin * 60000).toISOString(), mission_elapsed_time_h: k * s.stepMin / 60, body,
+      azimuth_deg: sun ? s.sunAz[k] : s.earthAz[k], elevation_deg: sun ? s.sunEl[k] : s.earthEl[k],
+      terrain_horizon_elevation_deg: run.geometryOnly ? null : (sun ? s.horizonSun[k] : s.horizonEarth[k]),
+      visibility_state: STATE_NAME[sun ? s.sunState[k] : s.earthState[k]], quality_state: run.qualityState, tolerance_deg: run.config.toleranceDeg,
+      method: CODE_VERSION, geometry: run.geometry.id + '@' + run.geometry.version, terrain: run.terrain ? 'horizon_' + run.site.id : null };
+  }
 
-  // ---------- metric catalogue (drives evidence records) ----------
-  const GEOM_LIMITS = ['Visibility uses the disc centre (Sun radius 0.27 deg, Earth 0.95 deg): partial discs not modelled.',
-    'Geometric ephemeris (no light-time/aberration, ~0.006 deg).', 'No refraction (airless).'];
+  // ---------------------------------------------------------------- metric catalogue
+  const GEOM_LIMITS = ['Disc centre is classified against the terrain horizon; within the tolerance the state is "uncertain" (partial disc or DEM-level error).',
+    'Sampled every step: transitions are known to one step, windows shorter than a step can be missed.', 'No refraction (airless body).'];
   const POWER_LIMITS = ['Not modelled: dust, lander self-shadowing, temperature derating, reflected light, panel degradation.',
-    'Partial solar disc not modelled (on/off at disc centre).'];
+    'Uncertain (grazing) Sun samples are counted as no power.', 'No charge or discharge efficiency and no heater model beyond the constant load.'];
+  const G = 'computed-geometry', EE = 'engineering-estimate';
   const METRICS = {
-    sunlitPct: { label: 'Sunlit', unit: '%', fmt: 'pct', q: 'computed-geometry', vis: true,
-      method: 'Fraction of 10-min steps with Sun centre elevation above the terrain horizon mask at the Sun azimuth.', limits: GEOM_LIMITS },
-    earthVisiblePct: { label: 'Earth visible', unit: '%', fmt: 'pct', q: 'computed-geometry', vis: true,
-      method: 'Fraction of steps with Earth centre above both the terrain mask and the minimum antenna elevation. Geometric visibility only, not a link budget.', limits: GEOM_LIMITS.concat(['Geometric line of sight is not a working link (no antenna, power or ground-station model).']) },
-    longestDarkGapH: { label: 'Longest dark gap', unit: 'h', fmt: 'h', q: 'computed-geometry', vis: true,
-      method: 'Longest run of consecutive steps without sunVisible, times the step.', limits: GEOM_LIMITS.concat(['Bounded by the mission window: gaps that start before T+0 or end after the mission are truncated.']) },
-    longestNoEarthGapH: { label: 'Longest no-Earth gap', unit: 'h', fmt: 'h', q: 'computed-geometry', vis: true,
-      method: 'Longest run of consecutive steps without earthVisible, times the step.', limits: GEOM_LIMITS },
-    timeToSunsetH: { label: 'First sunset', unit: 'h', fmt: 'met', q: 'computed-geometry', vis: true,
-      method: 'From T+0, steps until the first visible-to-hidden Sun transition. Empty if none inside the mission.', limits: GEOM_LIMITS },
-    timeToSunriseH: { label: 'First sunrise', unit: 'h', fmt: 'met', q: 'computed-geometry', vis: true,
-      method: 'From T+0, steps until the first hidden-to-visible Sun transition.', limits: GEOM_LIMITS },
-    timeToEarthsetH: { label: 'First Earthset', unit: 'h', fmt: 'met', q: 'computed-geometry', vis: true,
-      method: 'From T+0, steps until the first visible-to-hidden Earth transition.', limits: GEOM_LIMITS },
-    energyWh: { label: 'Generated energy', unit: 'Wh', fmt: 'wh', q: 'engineering-estimate', vis: true,
-      method: 'Sum of P(t)*step with P = A*eta*1361*(1 AU/r)^2*max(0,cos(theta))*sunVisible*(1-losses), for the selected panel type.', limits: POWER_LIMITS },
-    verticalToHorizontalRatio: { label: 'Vertical / horizontal energy', unit: '×', fmt: 'x1', q: 'engineering-estimate', vis: true,
-      method: 'Energy of a vertical sun-tracking array (cos theta = cos el) divided by a horizontal one (cos theta = sin el), same area and efficiency.', limits: POWER_LIMITS },
-    meanSunElDeg: { label: 'Mean Sun elevation (sunlit)', unit: '°', fmt: 'deg', q: 'computed-geometry', vis: true,
-      method: 'Mean Sun centre elevation over sunlit steps.', limits: GEOM_LIMITS },
-    shadowLengthM: { label: 'Shadow of a 1 m rock', unit: 'm', fmt: 'm', q: 'computed-geometry', vis: true,
-      method: '1 m / tan(mean sunlit Sun elevation), on flat ground.', limits: ['Flat-ground approximation; slopes change shadow length.'] },
-    maxEarthElDeg: { label: 'Max Earth elevation (visible)', unit: '°', fmt: 'deg', q: 'computed-geometry', vis: true,
-      method: 'Highest Earth centre elevation among steps where Earth is visible.', limits: GEOM_LIMITS },
-    minSocPct: { label: 'Minimum battery SoC', unit: '%', fmt: 'pct', q: 'engineering-estimate', vis: true,
-      method: 'Battery simulation: constant load, SoC starts at the initial value, charge clamped to capacity, discharge clamped at the depth-of-discharge floor (load shed).', limits: POWER_LIMITS.concat(['No charge/discharge efficiency, no thermal/heater model beyond the constant load.']) },
-    socMarginPct: { label: 'Battery margin above DoD floor', unit: '% of capacity', fmt: 'pct', q: 'engineering-estimate', vis: true,
-      method: 'Minimum SoC minus the depth-of-discharge floor (100% - DoD). Zero means the battery hit the floor (brownout).', limits: POWER_LIMITS.concat(['No charge/discharge efficiency, no thermal/heater model beyond the constant load.']) },
-    brownoutMetH: { label: 'Brownout', unit: 'h', fmt: 'met', q: 'engineering-estimate', vis: true,
-      method: 'First MET at which SoC reaches capacity*(1-DoD).', limits: POWER_LIMITS },
-    requiredStorageWh: { label: 'Storage for longest dark gap', unit: 'Wh', fmt: 'wh', q: 'engineering-estimate', vis: true,
-      method: 'load * longest dark gap / usable depth of discharge (rule of thumb).', limits: ['Rule-of-thumb sizing; ignores margins, ageing and heater power.'] },
-    energyBalanceWh: { label: 'Energy balance', unit: 'Wh', fmt: 'wh', q: 'engineering-estimate', vis: true,
-      method: 'Generated energy minus load energy over the mission.', limits: POWER_LIMITS },
+    sunlitPct: { label: 'Sun visible', unit: '%', fmt: 'pct', q: G, body: 'sun', method: 'Share of samples classified visible: Sun centre elevation above the terrain horizon at its azimuth by more than the tolerance.', limits: GEOM_LIMITS, unc: 'sunUncertainPct' },
+    earthVisiblePct: { label: 'Earth visible', unit: '%', fmt: 'pct', q: G, body: 'earth', method: 'Share of samples classified visible: Earth centre above max(terrain horizon, minimum antenna elevation) by more than the tolerance.', limits: GEOM_LIMITS.concat(['Geometric line of sight only: not a communications link budget.']), unc: 'earthUncertainPct' },
+    sunVisibleH: { label: 'Total Sun-visible duration', unit: 'h', fmt: 'h', q: G, body: 'sun', method: 'Number of visible samples times the sampling step.', limits: GEOM_LIMITS },
+    earthVisibleH: { label: 'Total Earth-visible duration', unit: 'h', fmt: 'h', q: G, body: 'earth', method: 'Number of visible samples times the sampling step.', limits: GEOM_LIMITS },
+    longestDarkGapH: { label: 'Longest Sun obstruction', unit: 'h', fmt: 'h', q: G, body: 'sun', at: 'longestDarkGapStartH', atLabel: 'from', method: 'Longest run of consecutive samples in which the Sun is not classified visible, times the step.', limits: GEOM_LIMITS.concat(['Truncated by the mission window: a gap that starts before T+0 or ends after the mission is cut.']) },
+    longestNoEarthGapH: { label: 'Longest Earth obstruction', unit: 'h', fmt: 'h', q: G, body: 'earth', at: 'longestNoEarthGapStartH', atLabel: 'from', method: 'Longest run of consecutive samples in which Earth is not classified visible, times the step.', limits: GEOM_LIMITS },
+    timeToSunsetH: { label: 'First sunset', unit: 'h', fmt: 'met', q: G, body: 'sun', method: 'From T+0, the first visible-to-not-visible Sun transition. Empty when none falls inside the mission.', limits: GEOM_LIMITS },
+    timeToSunriseH: { label: 'First sunrise', unit: 'h', fmt: 'met', q: G, body: 'sun', method: 'From T+0, the first not-visible-to-visible Sun transition.', limits: GEOM_LIMITS },
+    meanSunElDeg: { label: 'Mean Sun elevation while visible', unit: '°', fmt: 'deg', q: G, body: 'sun', method: 'Mean Sun centre elevation over visible samples.', limits: GEOM_LIMITS },
+    maxSunElDeg: { label: 'Maximum Sun elevation', unit: '°', fmt: 'deg', q: G, body: 'sun', method: 'Highest Sun centre elevation in the mission, regardless of terrain.', limits: ['Positive elevation alone is not terrain-adjusted visibility.'] },
+    maxEarthElDeg: { label: 'Maximum Earth elevation', unit: '°', fmt: 'deg', q: G, body: 'earth', method: 'Highest Earth centre elevation in the mission, regardless of terrain.', limits: ['Positive elevation alone is not terrain-adjusted visibility.'] },
+    shadowLengthM: { label: 'Shadow of a 1 m rock', unit: 'm', fmt: 'm', q: G, body: 'sun', method: '1 m / tan(mean Sun elevation while visible), on flat ground.', limits: ['Flat-ground approximation; slopes change shadow length.'] },
+    energyWh: { label: 'Generated energy (estimate)', unit: 'Wh', fmt: 'wh', q: EE, body: 'sun', method: 'Sum of P(t) x step, P = A x eta x 1361 W/m2 x (1 AU/r)^2 x cos(theta) x sunVisible x (1 - losses), selected panel type.', limits: POWER_LIMITS },
+    verticalToHorizontalRatio: { label: 'Vertical vs horizontal array energy', unit: '×', fmt: 'x1', q: EE, body: 'sun', method: 'Energy of a vertical Sun-tracking array (cos theta = cos el) divided by a horizontal one (cos theta = sin el), same area and efficiency.', limits: POWER_LIMITS },
+    minSocPct: { label: 'Minimum battery charge (estimate)', unit: '%', fmt: 'pct', q: EE, body: 'sun', at: 'minSocAtH', atLabel: 'at', method: 'Battery simulation: constant load, starts at the initial charge, charge clamped to capacity, discharge stops at the depth-of-discharge floor.', limits: POWER_LIMITS },
+    socMarginPct: { label: 'Battery margin above floor (estimate)', unit: '% of capacity', fmt: 'pct', q: EE, body: 'sun', at: 'minSocAtH', atLabel: 'at', method: 'Minimum charge minus the depth-of-discharge floor (100% - DoD). Zero means the battery reached the floor.', limits: POWER_LIMITS },
+    brownoutMetH: { label: 'Battery reaches floor (estimate)', unit: 'h', fmt: 'met', q: EE, body: 'sun', method: 'First mission time at which the charge reaches capacity x (1 - DoD).', limits: POWER_LIMITS },
+    requiredStorageWh: { label: 'Storage for the longest Sun obstruction (estimate)', unit: 'Wh', fmt: 'wh', q: EE, body: 'sun', method: 'load x longest Sun obstruction / usable depth of discharge (rule of thumb).', limits: ['Rule-of-thumb sizing; ignores margins, ageing and heater power.'] },
+    energyBalanceWh: { label: 'Energy balance (estimate)', unit: 'Wh', fmt: 'wh', q: EE, body: 'sun', method: 'Generated energy minus load energy over the mission.', limits: POWER_LIMITS },
   };
 
-  function evidence({ metricId, value, scenario, site, mask, hw, hash, sources, extra }) {
-    const d = METRICS[metricId] || { label: metricId, unit: '', q: 'computed-geometry', method: '', limits: [] };
-    const assumptions = [];
-    if (d.vis) assumptions.push(mask ? `Terrain horizon mask from LOLA (${mask.dem?.product || 'DEM'}), observer height ${mask.observerHeightM} m.` : 'No terrain mask: geometry-only horizon (0 deg). Visibility is optimistic.');
-    if (d.q === 'engineering-estimate') assumptions.push(
-      `Panel ${hw.panelType}, ${hw.panelAreaM2} m², efficiency ${(hw.efficiency * 100).toFixed(0)}%, losses ${(hw.losses * 100).toFixed(0)}%, load ${hw.loadW} W, battery ${hw.batteryWh} Wh, DoD ${(hw.dod * 100).toFixed(0)}% (user-assumption${hw.confirmed ? ', confirmed by user' : ', default'}).`);
-    if (metricId === 'earthVisiblePct' || metricId === 'longestNoEarthGapH') assumptions.push(`Minimum antenna elevation ${hw.minEarthElevDeg}° (user-assumption).`);
-    assumptions.push(`Site ${site.name} at ${site.lat.toFixed(4)}°, ${site.lon.toFixed(4)}°, elevation ${site.elevationM ?? 0} m (coordinates ${site.coordStatus || 'unverified'}).`);
-    const srcIds = ['naif-spice'].concat(d.vis && mask ? ['lola-ldem'] : []).concat(d.q === 'engineering-estimate' ? ['solar-constant'] : []);
+  // ---------------------------------------------------------------- indicator records + store
+  function scenarioId(run) { return hash({ s: run.scenario.siteId || run.site.id, t: run.scenario.startUtc, d: run.scenario.durationDays, la: run.site.lat, lo: run.site.lon, m: run.terrain ? (run.terrain.rec.uploaded || run.terrain.rec.generatedUtc || 'mask') : null, hw: run.hw, c: run.config }); }
+  /** Indicator record (schemas/indicator-record.schema.json): one derived value with its full lineage. */
+  function indicatorRecord(run, metricId, ctx) {
+    const d = METRICS[metricId]; if (!d) return null;
+    const sid = scenarioId(run), s = run.series, hw = run.hw, estimate = d.q === EE;
+    const value = run.metrics[metricId];
+    const t = run.terrain && run.terrain.describe();
+    const g = run.geometry.describe();
+    const inputs = [`adapter:${g.id}@${g.version}`, t ? `product:horizon_${run.site.id}` : 'terrain:unavailable', `scenario:${sid}`];
+    if (estimate) inputs.push('assumptions:hardware');
     return {
-      metricId, label: d.label, value, unit: d.unit, qualityClass: mask || !d.vis ? d.q : d.q,
-      fidelity: d.vis ? (mask ? 'terrain (LOLA)' : 'geometry only, no terrain') : 'n/a',
-      inputs: ['ephemeris (MOON_ME, hourly, linear interpolation to 10 min)', mask ? `horizon_${site.id}` : 'no horizon mask', `scenario ${scenario.name || ''}: ${scenario.startUtc}, ${scenario.durationDays} d`],
-      method: d.method, assumptions, limitations: d.limits,
-      sources: (sources || []).filter(s => srcIds.includes(s.id)).map(s => ({ name: s.name, version: s.version, url: s.url })),
-      scenarioHash: hash, codeVersion: CODE_VERSION, ...(extra || {}),
+      id: `ind:${sid}:${metricId}`, metricId, label: d.label, value: value === undefined ? null : value, unit: d.unit, dataType: 'number',
+      classification: d.q, qualityState: value === null || value === undefined ? 'unavailable' : (run.geometryOnly ? 'limited' : (d.unc && run.metrics[d.unc] > 0 ? 'uncertain' : 'supported')),
+      bounds: { conservative: run.bounds.conservative[metricId], optimistic: run.bounds.optimistic[metricId], note: run.geometryOnly ? 'Terrain unavailable: the displayed value is the optimistic bound (no obstruction).' : 'Displayed value counts uncertain samples as not visible.' },
+      uncertainSharePct: d.unc ? run.metrics[d.unc] : (d.body === 'sun' ? run.metrics.sunUncertainPct : run.metrics.earthUncertainPct),
+      worstCase: d.at && run.metrics[d.at] !== null && run.metrics[d.at] !== undefined ? { metH: run.metrics[d.at], utc: new Date(s.t0 + run.metrics[d.at] * 3600000).toISOString(), relation: d.atLabel } : null,
+      location: { siteId: run.site.id, name: run.site.name, lat: run.site.lat, lon: run.site.lon, elevationM: run.site.elevationM ?? null, frame: 'MOON_ME', convention: 'planetocentric latitude, east-positive longitude [-180, 180]', coordStatus: run.site.coordStatus || 'user-entered' },
+      time: { startUtc: run.scenario.startUtc, endUtc: new Date(s.t0 + run.metrics.durationH * 3600000).toISOString(), standard: 'UTC', stepSec: s.stepMin * 60 },
+      method: { id: 'selenix.' + metricId, version: CODE_VERSION, description: d.method,
+        parameters: { toleranceDeg: run.config.toleranceDeg, stepMin: s.stepMin, observerHeightM: t ? t.observerHeightM : null, minEarthElevDeg: d.body === 'earth' ? hw.minEarthElevDeg : undefined,
+          ...(estimate ? { panelType: hw.panelType, panelAreaM2: hw.panelAreaM2, efficiency: hw.efficiency, losses: hw.losses, loadW: hw.loadW, batteryWh: hw.batteryWh, dod: hw.dod, initialSocPct: hw.initialSocPct, assumptionsConfirmed: !!hw.confirmed } : {}) } },
+      inputs,
+      sources: [{ id: 'naif-spice', name: 'NAIF SPICE: ' + (g.sources || []).map(x => x.file).join(', '), version: `${g.toolkit}, frame ${g.frame}, ${g.aberration}`, url: g.sourceUrl }]
+        .concat(t ? [{ id: 'lola-ldem', name: t.userSupplied ? 'User-supplied horizon mask' : 'LRO LOLA DEM ' + t.product, version: t.version || '', url: t.sourceUrl || '' }] : [])
+        .concat(estimate ? [{ id: 'solar-constant', name: 'Total solar irradiance 1361 W/m2 (Kopp & Lean 2011)', version: '', url: 'https://doi.org/10.1029/2010GL045777' }] : []),
+      limitations: d.limits.concat(run.geometryOnly ? ['Terrain data unavailable for this site: no sample can be classified visible.'] : []),
+      validation: { refs: (ctx && ctx.validationRefs ? ctx.validationRefs(d) : []) },
+      scenarioHash: sid, codeVersion: CODE_VERSION, createdUtc: new Date().toISOString(),
+    };
+  }
+  function createStore() {
+    const m = new Map();
+    return {
+      put(rec) { if (rec && rec.id) m.set(rec.id, rec); return rec; },
+      get(id) { return m.get(id) || null; },
+      list(filter) { const a = [...m.values()]; return filter ? a.filter(filter) : a; },
+      clear() { m.clear(); },
+      size() { return m.size; },
+      /** Lineage chain for a record: record -> inputs -> sources. */
+      lineage(id) { const r = m.get(id); return r ? { record: r.id, method: r.method && r.method.id, inputs: r.inputs || r.evidence || [], sources: (r.sources || []).map(s => s.name) } : null; },
     };
   }
 
-  // ---------- requirement checker ----------
+  // ---------------------------------------------------------------- requirement checker -> proof objects
   function compare(op, a, b) {
-    switch (op) {
-      case '>=': return a >= b; case '<=': return a <= b; case '>': return a > b; case '<': return a < b;
-      case '==': return a === b; case '!=': return a !== b; default: throw new Error('bad op ' + op);
-    }
+    switch (op) { case '>=': return a >= b; case '<=': return a <= b; case '>': return a > b; case '<': return a < b; case '==': return a === b; case '!=': return a !== b; default: throw new Error('bad op ' + op); }
   }
-  /** ctx: { hasMask, hwConfirmed, marginPct } */
-  function checkRequirement(req, metrics, ctx) {
-    const value = metrics[req.metric];
-    const base = { reqId: req.id, metric: req.metric, value, threshold: req.threshold, op: req.op, unit: req.unit, reasons: [] };
-    if (value === null || value === undefined || Number.isNaN(value) || req.threshold === null || req.threshold === '' || Number.isNaN(+req.threshold)) {
-      return { ...base, state: 'unknown', reasons: ['A required input or threshold is missing.'] };
+  const REASON_LABEL = { terrain: 'terrain', close: 'close to threshold', grazing: 'grazing samples', defaults: 'default assumptions' };
+  function subStateLabel(reasons) {
+    if (!reasons.length) return null;
+    if (reasons.length === 2 && reasons.includes('terrain') && reasons.includes('close')) return 'both';
+    return reasons.map(r => REASON_LABEL[r]).join(' + ');
+  }
+  /** Returns a proof object (schemas/proof-object.schema.json). ctx: { marginPct } */
+  function checkRequirement(req, run, ctx) {
+    const marginPct = (ctx && ctx.marginPct) ?? 10, d = METRICS[req.metric] || {};
+    const value = run.metrics[req.metric], thr = req.threshold === '' || req.threshold === null || req.threshold === undefined ? NaN : +req.threshold;
+    const sid = scenarioId(run);
+    const proof = { id: `proof:${sid}:${req.id}`, requirementId: req.id, label: req.label, statement: `${req.metric} ${req.op} ${req.threshold} ${req.unit || ''}`.trim(),
+      metric: req.metric, op: req.op, threshold: Number.isNaN(thr) ? null : thr, unit: req.unit, marginPct, observed: { indicatorId: `ind:${sid}:${req.metric}`, value: value ?? null,
+        at: d.at && run.metrics[d.at] !== null && run.metrics[d.at] !== undefined ? { metH: run.metrics[d.at], relation: d.atLabel } : null },
+      bounds: { conservative: run.bounds.conservative[req.metric] ?? null, optimistic: run.bounds.optimistic[req.metric] ?? null },
+      short: req.short || req.label, steps: [], reasons: [], evidence: [`ind:${sid}:${req.metric}`], scenarioHash: sid, method: CODE_VERSION, createdUtc: new Date().toISOString() };
+    const step = (check, result, detail) => proof.steps.push({ check, result, detail });
+    if (value === null || value === undefined || Number.isNaN(value) || Number.isNaN(thr)) {
+      step('inputs-present', false, 'A required value or threshold is missing.');
+      return { ...proof, verdict: 'unknown', subState: null, pass: null, driver: 'A required input or threshold is missing.' };
     }
-    const thr = +req.threshold;
+    step('inputs-present', true, 'Indicator and threshold are available.');
     const pass = compare(req.op, value, thr);
-    const margin = (ctx.marginPct ?? 10) / 100 * Math.max(Math.abs(thr), 1e-9);
-    const near = Math.abs(value - thr) <= margin;
-    let state = pass ? 'meets' : 'does not meet';
-    if (pass && near) { state = 'needs review'; base.reasons.push(`Within ${ctx.marginPct ?? 10}% of the threshold.`); }
-    if (!pass && near) { state = 'needs review'; base.reasons.push(`Misses the threshold by less than ${ctx.marginPct ?? 10}%.`); }
-    if (req.visibilityDependent && !ctx.hasMask) {
-      if (state === 'meets' || (state === 'needs review' && pass)) { state = 'needs review'; base.reasons.push('needs review (no terrain): geometry-only visibility is optimistic.'); }
-      else if (state === 'does not meet') base.reasons.push('Holds without terrain: terrain can only reduce visibility.');
+    step('threshold', pass, `${fmtReq(value, d.fmt)} ${req.op} ${fmtReq(thr, d.fmt)} is ${pass}.`);
+    let verdict = pass ? 'meets' : 'does not meet';
+    const reasons = proof.reasons;
+    if (req.visibilityDependent) {
+      const c = proof.bounds.conservative, o = proof.bounds.optimistic;
+      const passC = c !== null && compare(req.op, c, thr), passO = o !== null && compare(req.op, o, thr);
+      if (run.geometryOnly) {
+        if (passO) { reasons.push('terrain'); step('terrain-data', false, 'Terrain is unavailable for this site, so no sample can be classified visible. The value shown assumes no obstruction; real terrain can only reduce visibility.'); }
+        else step('terrain-data', true, 'Terrain is unavailable, but the requirement fails even with no obstruction, so the result holds.');
+      } else {
+        step('terrain-data', true, `Terrain horizon applied (${run.terrain.describe().product || 'user mask'}).`);
+        if (passC !== passO) { reasons.push('grazing'); step('uncertain-samples', false, `The verdict depends on how uncertain (near-horizon) samples are counted: ${fmtReq(c, d.fmt)} if obstructed, ${fmtReq(o, d.fmt)} if visible.`); }
+        else step('uncertain-samples', true, `Same result whether uncertain samples are counted as obstructed (${fmtReq(c, d.fmt)}) or visible (${fmtReq(o, d.fmt)}).`);
+      }
     }
-    if (req.powerDependent && !ctx.hwConfirmed && pass) { state = 'needs review'; base.reasons.push('Uses default hardware assumptions; confirm them to finalise.'); }
-    base.reasons.unshift(`${fmtNum(value, req.unit)} ${req.op} ${fmtNum(thr, req.unit)}: ${pass ? 'passes' : 'fails'} the stated threshold.`);
-    return { ...base, state, pass };
+    const margin = marginPct / 100 * Math.max(Math.abs(thr), 1e-9), near = Math.abs(value - thr) <= margin;
+    if (near) reasons.push('close');
+    step('margin', !near, near ? `Within ${marginPct}% of the threshold (${fmtReq(Math.abs(value - thr), d.fmt)} away).` : `More than ${marginPct}% away from the threshold.`);
+    if (req.powerDependent) {
+      const confirmed = !!run.hw.confirmed;
+      if (!confirmed && pass) reasons.push('defaults');
+      step('assumptions-confirmed', confirmed, confirmed ? 'Hardware values confirmed by the user.' : 'Power inputs are default assumptions, not confirmed mission values.');
+    }
+    if (reasons.length) {
+      // a clear failure stays a failure: only "terrain"/"defaults" on a pass, or "close"/"grazing", send it to review
+      verdict = 'needs review';
+    }
+    const at = proof.observed.at ? ` ${proof.observed.at.relation} T+${fmtHours(proof.observed.at.metH)}` : '';
+    const driver = `${d.label || req.metric} is ${fmtReq(value, d.fmt)}${at}; the requirement is ${req.op} ${fmtReq(thr, d.fmt)}.`;
+    return { ...proof, verdict, subState: verdict === 'needs review' ? subStateLabel(reasons) : null, pass, driver };
   }
+  function fmtReq(v, f) { return format(v, f === 'met' ? 'h' : f); }
 
-  // ---------- rules ----------
+  // ---------------------------------------------------------------- rules
   function resolveVar(expr, metrics, ctx) {
     const [kind, key] = expr.split(':');
     if (kind === 'metric') return metrics[key];
     if (kind === 'hw') return key === 'dodPct' ? ctx.hw.dod * 100 : ctx.hw[key];
     if (kind === 'req') { const r = (ctx.requirements || []).find(x => x.id === key); return r ? +r.threshold : null; }
+    if (kind === 'cfg') return ctx.config ? ctx.config[key] : null;
     return null;
   }
   function evalCondition(c, metrics, ctx) {
     if (c.all) return c.all.every(x => evalCondition(x, metrics, ctx));
     if (c.any) return c.any.some(x => evalCondition(x, metrics, ctx));
     if (c.flag) return !!(ctx.flags || {})[c.flag];
-    if (c.comparison) return false; // handled by the app (R6)
-    const v = metrics[c.metric];
-    const target = 'ref' in c ? resolveVar(c.ref, metrics, ctx) : c.value;
+    if (c.comparison) return false;
+    const v = metrics[c.metric], target = 'ref' in c ? resolveVar(c.ref, metrics, ctx) : c.value;
     if (c.op === '!=' && target === null) return v !== null && v !== undefined;
     if (c.op === '==' && target === null) return v === null || v === undefined;
     if (v === null || v === undefined || target === null || target === undefined) return false;
@@ -261,27 +350,26 @@
     if (!evalCondition(rule.condition, metrics, ctx)) return { id: rule.id, fired: false };
     const values = {};
     for (const [name, expr] of Object.entries(rule.vars || {})) values[name] = resolveVar(expr, metrics, ctx);
-    const text = fillTemplate(rule.template, values);
-    return { id: rule.id, fired: true, title: rule.title, severity: rule.severity, text, values, vars: rule.vars, inputs: rule.inputs, qualityClass: rule.qualityClass, condition: rule.condition };
+    return { id: rule.id, fired: true, title: rule.title, severity: rule.severity, shared: !!rule.shared, text: fillTemplate(rule.log || rule.template, values), detail: fillTemplate(rule.template, values),
+      chip: rule.chip ? fillTemplate(rule.chip, values) : null, values, vars: rule.vars, inputs: rule.inputs, qualityClass: rule.qualityClass, condition: rule.condition, template: rule.template };
   }
-  function fillTemplate(t, values) {
-    return t.replace(/\{(\w+)(?:\|(\w+))?\}/g, (_, name, f) => (name in values ? format(values[name], f) : `{${name}}`));
-  }
+  function fillTemplate(t, values) { return t.replace(/\{(\w+)(?:\|(\w+))?\}/g, (_, name, f) => (name in values ? format(values[name], f) : `{${name}}`)); }
 
-  // ---------- formatting ----------
+  // ---------------------------------------------------------------- formatting
   function format(v, f) {
     if (v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v))) return '—';
     if (typeof v !== 'number') return String(v);
     switch (f) {
       case 'h': return fmtHours(v);
       case 'met': return 'T+' + fmtHours(v);
-      case 'pct': return v.toFixed(v >= 10 || v === 0 ? 0 : 1) + '%';
+      case 'pct': return (Math.abs(v) >= 9.95 || Math.abs(v) < 0.05 ? Math.abs(v) < 0.05 ? '0' : v.toFixed(0) : v.toFixed(1)) + '%';
       case 'pct0': return v.toFixed(0) + '%';
       case 'pp': { const r = Math.round(v); return (r > 0 ? '+' : '') + r + ' points'; }
       case 'wh': return Math.abs(v) >= 10000 ? (v / 1000).toFixed(1) + ' kWh' : Math.round(v).toLocaleString('en-US') + ' Wh';
       case 'w': return Math.round(v) + ' W';
       case 'deg': return v.toFixed(1) + '°';
-      case 'x1': return v.toFixed(1);
+      case 'deg2': return v.toFixed(2) + '°';
+      case 'x1': return v.toFixed(1) + '×';
       case 'm': return v.toFixed(v < 10 ? 1 : 0) + ' m';
       case 'int': return Math.round(v).toString();
       default: return (Math.round(v * 100) / 100).toString();
@@ -292,23 +380,15 @@
     const t = Math.round(h), d = Math.floor(t / 24), r = t - d * 24;
     return r ? `${d} d ${r} h` : `${d} d`;
   }
-  function fmtNum(v, unit) {
-    if (unit === 'h') return fmtHours(v);
-    if (unit === '%') return v.toFixed(1) + '%';
-    return (Math.round(v * 10) / 10) + (unit ? ' ' + unit : '');
-  }
-
-  // ---------- misc ----------
   function hash(obj) {
-    const s = JSON.stringify(obj);
-    let h = 0x811c9dc5;
+    const s = JSON.stringify(obj); let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
     return ('0000000' + (h >>> 0).toString(16)).slice(-8);
   }
 
-  const Engine = { R_MOON_KM, AU_KM, SOLAR_CONSTANT, CODE_VERSION, PANEL_TYPES, METRICS,
-    loadEphemeris, ephAt, ephRange, enu, siteFrame, azEl, maskAt, cosIncidence, simulate, timeToTransition, longestRun,
-    evidence, checkRequirement, evalRule, evalCondition, fillTemplate, format, fmtHours, hash };
+  const Engine = { R_MOON_KM, AU_KM, SOLAR_CONSTANT, CODE_VERSION, PANEL_TYPES, METRICS, DEFAULT_CONFIG, OBSTRUCTED, UNCERTAIN, VISIBLE, STATE_NAME,
+    SpiceTableAdapter, HorizonMaskAdapter, enu, siteFrame, azEl, classify, cosIncidence, simulate, intervals, timeToTransition, longestRun, sampleRecord,
+    scenarioId, indicatorRecord, createStore, checkRequirement, subStateLabel, evalRule, evalCondition, fillTemplate, format, fmtHours, hash };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
   else root.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

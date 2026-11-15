@@ -1,0 +1,4 @@
+{
+  "note": "Demo defaults (quality class user-assumption). The user confirms or replaces them in the app.",
+  "defaults": { "panelType": "vertical-tracking", "panelAzDeg": 0, "panelAreaM2": 2, "efficiency": 0.28, "losses": 0.10, "loadW": 150, "batteryWh": 5000, "dod": 0.8, "initialSocPct": 100, "minEarthElevDeg": 2, "confirmed": false }
+}

@@ -1,0 +1,14 @@
+{
+  "toleranceDeg": 0.27,
+  "stepMin": 10,
+  "toleranceRationale": "0.27 deg is the Sun's angular radius: inside this band the solar disc is partly cut by terrain, and it is also the scale of error expected from 1-degree azimuth bins and 40-120 m DEM cells. Samples inside the band are classified 'uncertain', not visible or obstructed. The same band is applied to Earth.",
+  "observerHeightM": 2.0,
+  "sweep": {
+    "startUtc": "2027-07-03T12:00:00Z",
+    "stepDays": 3,
+    "count": 36,
+    "durationDays": 10
+  },
+  "nearFieldM": 120.0,
+  "nearFieldRationale": "Terrain closer than 120 m (three 40 m DEM cells) is treated as the landing spot itself, not as horizon. At grazing Sun angles, metre-scale relief inside this distance dominates the horizon on ridge crests, yet the DEM does not resolve it reliably and lander placement controls it. 120 m gave the best agreement with the published LOLA illumination maps (see benchmark)."
+}

@@ -4,58 +4,63 @@
   "requirements": [
     {
       "id": "REQ-SUN",
-      "label": "Sunlit fraction of mission",
+      "label": "Sun-visible share",
       "metric": "sunlitPct",
       "op": ">=",
       "threshold": 70,
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": false,
-      "rationale": "Enough sunlit time for solar-powered surface operations."
+      "rationale": "Enough sunlit time for solar-powered surface operations.",
+      "short": "Sun share"
     },
     {
       "id": "REQ-DARK",
-      "label": "Longest continuous darkness",
+      "label": "Longest Sun obstruction",
       "metric": "longestDarkGapH",
       "op": "<=",
       "threshold": 50,
       "unit": "h",
       "visibilityDependent": true,
       "powerDependent": false,
-      "rationale": "Darkness the lander must survive on battery and heaters."
+      "rationale": "Darkness the lander must survive on battery and heaters.",
+      "short": "Sun obstruction"
     },
     {
       "id": "REQ-EARTH",
-      "label": "Direct-to-Earth visible fraction",
+      "label": "Earth-visible share",
       "metric": "earthVisiblePct",
       "op": ">=",
       "threshold": 40,
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": false,
-      "rationale": "Geometric DTE availability (not a link budget)."
+      "rationale": "Geometric DTE availability (not a link budget).",
+      "short": "Earth share"
     },
     {
       "id": "REQ-COMMS-GAP",
-      "label": "Longest gap without Earth in view",
+      "label": "Longest gap without Earth",
       "metric": "longestNoEarthGapH",
       "op": "<=",
       "threshold": 72,
       "unit": "h",
       "visibilityDependent": true,
       "powerDependent": false,
-      "rationale": "Onboard autonomy and data buffering duration."
+      "rationale": "Onboard autonomy and data buffering duration.",
+      "short": "Earth gap"
     },
     {
       "id": "REQ-POWER",
-      "label": "Battery margin above depth-of-discharge floor",
+      "label": "Battery margin above floor (est.)",
       "metric": "socMarginPct",
       "op": ">=",
       "threshold": 10,
       "unit": "%",
       "visibilityDependent": true,
       "powerDependent": true,
-      "rationale": "Minimum charge stays at least 10% of capacity above the DoD floor; 0 means brownout."
+      "rationale": "Minimum charge stays at least 10% of capacity above the DoD floor; 0 means brownout.",
+      "short": "battery margin"
     }
   ]
 }

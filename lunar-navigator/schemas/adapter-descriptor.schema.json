@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "selenix/adapter-descriptor.schema.json",
+  "title": "Adapter descriptor",
+  "description": "What adapter.describe() returns: enough provenance to reproduce the adapter's output.",
+  "type": "object",
+  "required": ["id", "kind", "version"],
+  "properties": {
+    "id": { "type": "string" },
+    "kind": { "enum": ["geometry", "terrain"] },
+    "version": { "type": "string" },
+    "derivedFrom": { "type": "string" },
+    "provider": { "type": "string" },
+    "sources": { "type": "array", "items": { "type": "object", "properties": { "file": { "type": "string" }, "type": { "type": "string" }, "role": { "type": "string" }, "bytes": { "type": "integer" } } } },
+    "sourceUrl": { "type": "string" },
+    "toolkit": { "type": "string" },
+    "frame": { "type": "string" },
+    "timeSystem": { "type": "string" },
+    "aberration": { "type": "string" },
+    "coverage": { "type": "object", "properties": { "startUtc": { "type": "string" }, "endUtc": { "type": "string" } } },
+    "product": { "type": "string" },
+    "resolutionM": { "type": "array", "items": { "type": "number" } },
+    "observerHeightM": { "type": ["number", "null"] },
+    "method": { "type": "string" }
+  }
+}

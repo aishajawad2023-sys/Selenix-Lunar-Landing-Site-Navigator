@@ -1,224 +1,313 @@
 {
  "checks": [
   {
-   "name": "Polar limit: Sun elevation at 90S",
+   "id": "polar-sun",
+   "name": "Sun elevation at 90\u00b0S",
    "status": "pass",
-   "detail": "range -1.59 to 1.59 deg (expected within about +/-1.6; lunar obliquity to ecliptic 1.54 deg)"
+   "detail": "-1.59\u00b0 to 1.59\u00b0 over 2026-2030",
+   "tolerance": "within \u00b11.7\u00b0 (lunar obliquity 1.54\u00b0)"
   },
   {
-   "name": "Polar limit: Earth elevation at 90S",
+   "id": "polar-earth",
+   "name": "Earth elevation at 90\u00b0S",
    "status": "pass",
-   "detail": "range -7.10 to 6.61 deg (expected within about +/-7, libration in latitude)"
+   "detail": "-7.10\u00b0 to 6.61\u00b0",
+   "tolerance": "within \u00b17.5\u00b0 (libration in latitude plus parallax)"
   },
   {
+   "id": "libration",
    "name": "Sub-Earth point (libration)",
    "status": "pass",
-   "detail": "mean lat -0.07, mean lon 0.02; lon range +/-8.05, lat range +/-6.86 deg"
+   "detail": "mean -0.07\u00b0, 0.02\u00b0; range \u00b18.05\u00b0 lon, \u00b16.86\u00b0 lat",
+   "tolerance": "mean within 0.5\u00b0 of (0, 0); ranges 6-9\u00b0 and 6-7.5\u00b0"
   },
   {
+   "id": "azimuth-geometry",
    "name": "Azimuth convention (geometry)",
    "status": "pass",
-   "detail": "point placed due east reads az 90.000 deg (0=N, clockwise)"
+   "detail": "a point placed due east reads 90.000\u00b0",
+   "tolerance": "within 0.01\u00b0 of 90\u00b0"
   },
   {
-   "name": "Azimuth convention (DEM wall)",
+   "id": "azimuth-dem",
+   "name": "Azimuth convention (DEM)",
    "status": "pass",
-   "detail": "wall built due east appears at az 94 deg with height 26.3 deg; N/S/W -0.0/-0.0/-0.0 deg"
+   "detail": "a synthetic wall due east appears at 94\u00b0 (26.3\u00b0 high); north, south, west stay at -0.0\u00b0",
+   "tolerance": "peak within 5\u00b0 of 90\u00b0"
   },
   {
-   "name": "Terrain sanity: crater floor vs rim",
+   "id": "terrain-sanity",
+   "name": "Terrain sanity (crater floor vs rim)",
    "status": "pass",
-   "detail": "Shackleton floor horizon 19.8 to 23.6 deg; rim -2.5 to 1.1 deg"
+   "detail": "Shackleton floor horizon 19.8\u00b0 to 23.6\u00b0; rim -2.6\u00b0 to 1.0\u00b0",
+   "tolerance": "floor above 10\u00b0, rim below 5\u00b0"
   },
   {
-   "name": "Illumination plausibility: Connecting Ridge (Shackleton\u2013de Gerlache)",
+   "id": "missing-terrain",
+   "name": "Missing terrain is never 'visible'",
    "status": "pass",
-   "detail": "sunlit 88.4% of 2026-2030 (Sun centre above terrain); plausible range 80-95% from published south-polar illumination maps (Mazarico et al. 2011; Glaser et al. 2018), to verify"
+   "detail": "Shiv Shakti point (Chandrayaan-3) has no terrain data: 0 of 1441 samples classified visible; the rest are uncertain or obstructed",
+   "tolerance": "0 visible samples"
   },
   {
-   "name": "Illumination plausibility: Shackleton rim",
+   "id": "coordinates",
+   "name": "Site coordinates",
    "status": "pass",
-   "detail": "sunlit 81.7% of 2026-2030 (Sun centre above terrain); plausible range 75-95% from published south-polar illumination maps (Mazarico et al. 2011; Glaser et al. 2018), to verify"
+   "detail": "4 verified and 4 corrected against a cited source; none left to verify",
+   "tolerance": "every site verified or corrected with a citation"
   },
   {
-   "name": "Illumination plausibility: de Gerlache rim",
+   "id": "kernel-coverage",
+   "name": "SPICE kernel coverage",
    "status": "pass",
-   "detail": "sunlit 80.8% of 2026-2030 (Sun centre above terrain); plausible range 70-92% from published south-polar illumination maps (Mazarico et al. 2011; Glaser et al. 2018), to verify"
+   "detail": "table 2026-01-01 to 2031-01-01 lies inside kernel coverage 1849-12-25 to 2150-01-21",
+   "tolerance": "table window inside kernel coverage"
   },
   {
-   "name": "Illumination plausibility: Malapert massif",
+   "id": "horizons",
+   "name": "Independent check against JPL Horizons",
    "status": "pass",
-   "detail": "sunlit 72.0% of 2026-2030 (Sun centre above terrain); plausible range 55-85% from published south-polar illumination maps (Mazarico et al. 2011; Glaser et al. 2018), to verify"
+   "detail": "30 Sun and Earth azimuth/elevation comparisons (3 sites, 5 times including both demo dates); worst difference 0.00002\u00b0",
+   "tolerance": "under 0.001\u00b0"
   },
   {
-   "name": "Illumination plausibility: Shackleton crater floor (PSR reference)",
+   "id": "illumination-benchmark",
+   "name": "Illumination benchmark (published LOLA maps)",
    "status": "pass",
-   "detail": "sunlit 0.0% of 2026-2030 (Sun centre above terrain); plausible range 0-0.01% from published south-polar illumination maps (Mazarico et al. 2011; Glaser et al. 2018), to verify"
+   "detail": "45 points against NASA PGDA average-illumination maps: Sun median difference 0.97 points (RMS 1.97, worst 5.82); Earth median 0.24 points (RMS 1.75, worst 7.4)",
+   "tolerance": "median under 1.5 points (Sun) and 1.0 (Earth); RMS under 3 points"
+  },
+  {
+   "id": "regression",
+   "name": "Browser engine against Python reference",
+   "status": "pass",
+   "detail": "4 reference scenarios written; the browser re-runs them on load and node tests/regression.js checks them in CI",
+   "tolerance": "angles within 1e-9\u00b0, identical visibility states"
   }
  ],
- "illuminationPct2026_2030": {
-  "connecting-ridge": 88.4,
-  "shackleton-rim": 81.7,
-  "de-gerlache-rim": 80.8,
-  "malapert-massif": 72.0,
-  "shackleton-floor": 0.0
- },
  "horizonsCheck": {
-  "source": "JPL Horizons API (DE441), apparent az/el, airless",
+  "source": "JPL Horizons API (DE441), apparent azimuth/elevation, airless, MEAN_ME site coordinates",
+  "ours": "SPICE DE440 LT+S table, hourly, linear interpolation",
   "rows": [
    {
     "site": "mons-mouton",
-    "utc": "2026-06-01T00:00:00Z",
-    "body": "Sun",
-    "horizonsAz": 323.701110887,
-    "horizonsEl": 2.616025565,
-    "oursAz": 323.7069,
-    "oursEl": 2.61636,
-    "dAz": 0.00579,
-    "dEl": 0.00033
-   },
-   {
-    "site": "mons-mouton",
-    "utc": "2026-06-01T00:00:00Z",
-    "body": "Earth",
-    "horizonsAz": 330.867029768,
-    "horizonsEl": -2.085547892,
-    "oursAz": 330.86721,
-    "oursEl": -2.08553,
-    "dAz": 0.00018,
-    "dEl": 1e-05
-   },
-   {
-    "site": "mons-mouton",
     "utc": "2027-08-11T12:00:00Z",
     "body": "Sun",
-    "horizonsAz": 40.312029509,
-    "horizonsEl": 4.180293871,
-    "oursAz": 40.31773,
-    "oursEl": 4.18012,
-    "dAz": 0.0057,
-    "dEl": -0.00017
+    "horizonsAz": 40.316305133,
+    "horizonsEl": 4.179583756,
+    "oursAz": 40.316304,
+    "oursEl": 4.179584,
+    "dAz": -1e-06,
+    "dEl": 0.0
    },
    {
     "site": "mons-mouton",
     "utc": "2027-08-11T12:00:00Z",
     "body": "Earth",
-    "horizonsAz": 337.022642073,
-    "horizonsEl": -1.146928773,
-    "oursAz": 337.02283,
-    "oursEl": -1.14691,
-    "dAz": 0.00019,
-    "dEl": 2e-05
+    "horizonsAz": 337.026915016,
+    "horizonsEl": -1.147328839,
+    "oursAz": 337.026915,
+    "oursEl": -1.147351,
+    "dAz": -0.0,
+    "dEl": -2.2e-05
    },
    {
     "site": "mons-mouton",
-    "utc": "2029-12-24T06:30:00Z",
+    "utc": "2027-09-01T12:00:00Z",
     "body": "Sun",
-    "horizonsAz": 286.709987764,
-    "horizonsEl": 1.313261707,
-    "oursAz": 286.71591,
-    "oursEl": 1.31361,
-    "dAz": 0.00592,
-    "dEl": 0.00035
+    "horizonsAz": 143.741793578,
+    "horizonsEl": -3.465082753,
+    "oursAz": 143.741794,
+    "oursEl": -3.465083,
+    "dAz": 0.0,
+    "dEl": -0.0
    },
    {
     "site": "mons-mouton",
-    "utc": "2029-12-24T06:30:00Z",
+    "utc": "2027-09-01T12:00:00Z",
     "body": "Earth",
-    "horizonsAz": 325.24699756,
-    "horizonsEl": -0.85284379,
-    "oursAz": 325.24724,
-    "oursEl": -0.85279,
-    "dAz": 0.00024,
-    "dEl": 5e-05
+    "horizonsAz": 334.489979383,
+    "horizonsEl": 0.209666407,
+    "oursAz": 334.489979,
+    "oursEl": 0.209662,
+    "dAz": -0.0,
+    "dEl": -5e-06
    },
    {
-    "site": "connecting-ridge",
-    "utc": "2026-06-01T00:00:00Z",
+    "site": "mons-mouton",
+    "utc": "2027-07-03T12:00:00Z",
     "body": "Sun",
-    "horizonsAz": 130.321564119,
-    "horizonsEl": -1.946965773,
-    "oursAz": 130.32736,
-    "oursEl": -1.94699,
-    "dAz": 0.0058,
-    "dEl": -2e-05
+    "horizonsAz": 156.840716967,
+    "horizonsEl": -5.598530212,
+    "oursAz": 156.840717,
+    "oursEl": -5.59853,
+    "dAz": 0.0,
+    "dEl": -0.0
+   },
+   {
+    "site": "mons-mouton",
+    "utc": "2027-07-03T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 327.844071226,
+    "horizonsEl": 8.449235709,
+    "oursAz": 327.844071,
+    "oursEl": 8.44924,
+    "dAz": -1e-06,
+    "dEl": 4e-06
+   },
+   {
+    "site": "mons-mouton",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 314.775586345,
+    "horizonsEl": 5.183983138,
+    "oursAz": 314.775586,
+    "oursEl": 5.183983,
+    "dAz": 0.0,
+    "dEl": 0.0
+   },
+   {
+    "site": "mons-mouton",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 325.635253314,
+    "horizonsEl": 10.608944031,
+    "oursAz": 325.635253,
+    "oursEl": 10.608949,
+    "dAz": -1e-06,
+    "dEl": 5e-06
+   },
+   {
+    "site": "mons-mouton",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Sun",
+    "horizonsAz": 341.924387822,
+    "horizonsEl": 5.283405148,
+    "oursAz": 341.924388,
+    "oursEl": 5.283408,
+    "dAz": 0.0,
+    "dEl": 3e-06
+   },
+   {
+    "site": "mons-mouton",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Earth",
+    "horizonsAz": 330.616927364,
+    "horizonsEl": 4.353703673,
+    "oursAz": 330.616936,
+    "oursEl": 4.353698,
+    "dAz": 8e-06,
+    "dEl": -5e-06
    },
    {
     "site": "connecting-ridge",
-    "utc": "2026-06-01T00:00:00Z",
-    "body": "Earth",
-    "horizonsAz": 137.245847804,
-    "horizonsEl": -7.042168538,
-    "oursAz": 137.24603,
-    "oursEl": -7.04216,
-    "dAz": 0.00019,
+    "utc": "2027-08-11T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 206.826320876,
+    "horizonsEl": -0.266026426,
+    "oursAz": 206.82632,
+    "oursEl": -0.266026,
+    "dAz": -1e-06,
     "dEl": 0.0
    },
    {
     "site": "connecting-ridge",
     "utc": "2027-08-11T12:00:00Z",
-    "body": "Sun",
-    "horizonsAz": 206.789097734,
-    "horizonsEl": -0.297156312,
-    "oursAz": 206.79479,
-    "oursEl": -0.29697,
-    "dAz": 0.00569,
-    "dEl": 0.00019
+    "body": "Earth",
+    "horizonsAz": 143.516043757,
+    "horizonsEl": -6.36229388,
+    "oursAz": 143.516043,
+    "oursEl": -6.362316,
+    "dAz": -0.0,
+    "dEl": -2.2e-05
    },
    {
     "site": "connecting-ridge",
-    "utc": "2027-08-11T12:00:00Z",
-    "body": "Earth",
-    "horizonsAz": 143.476498763,
-    "horizonsEl": -6.38996443,
-    "oursAz": 143.47669,
-    "oursEl": -6.38995,
-    "dAz": 0.00019,
-    "dEl": 1e-05
+    "utc": "2027-09-01T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 310.447521688,
+    "horizonsEl": 1.079232482,
+    "oursAz": 310.447522,
+    "oursEl": 1.079232,
+    "dAz": 0.0,
+    "dEl": -0.0
    },
    {
     "site": "connecting-ridge",
-    "utc": "2029-12-24T06:30:00Z",
-    "body": "Sun",
-    "horizonsAz": 93.362897446,
-    "horizonsEl": -0.220689692,
-    "oursAz": 93.36883,
-    "oursEl": -0.22092,
-    "dAz": 0.00593,
-    "dEl": -0.00023
+    "utc": "2027-09-01T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 141.03005856,
+    "horizonsEl": -4.897828723,
+    "oursAz": 141.030058,
+    "oursEl": -4.897833,
+    "dAz": -0.0,
+    "dEl": -4e-06
    },
    {
     "site": "connecting-ridge",
-    "utc": "2029-12-24T06:30:00Z",
-    "body": "Earth",
-    "horizonsAz": 131.673602511,
-    "horizonsEl": -5.501431763,
-    "oursAz": 131.67385,
-    "oursEl": -5.50139,
-    "dAz": 0.00025,
-    "dEl": 4e-05
-   },
-   {
-    "site": "shiv-shakti",
-    "utc": "2026-06-01T00:00:00Z",
+    "utc": "2027-07-03T12:00:00Z",
     "body": "Sun",
-    "horizonsAz": 319.117122793,
-    "horizonsEl": 14.257120168,
-    "oursAz": 319.12294,
-    "oursEl": 14.25848,
-    "dAz": 0.00581,
-    "dEl": 0.00136
+    "horizonsAz": 323.597171566,
+    "horizonsEl": -0.383750819,
+    "oursAz": 323.597172,
+    "oursEl": -0.383751,
+    "dAz": 0.0,
+    "dEl": -0.0
    },
    {
-    "site": "shiv-shakti",
-    "utc": "2026-06-01T00:00:00Z",
+    "site": "connecting-ridge",
+    "utc": "2027-07-03T12:00:00Z",
     "body": "Earth",
-    "horizonsAz": 327.108554484,
-    "horizonsEl": 10.791489906,
-    "oursAz": 327.10874,
-    "oursEl": 10.79153,
-    "dAz": 0.00018,
-    "dEl": 4e-05
+    "horizonsAz": 134.825122888,
+    "horizonsEl": 3.65846706,
+    "oursAz": 134.825123,
+    "oursEl": 3.658471,
+    "dAz": -0.0,
+    "dEl": 4e-06
+   },
+   {
+    "site": "connecting-ridge",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 121.641020523,
+    "horizonsEl": 1.231170501,
+    "oursAz": 121.641021,
+    "oursEl": 1.23117,
+    "dAz": 0.0,
+    "dEl": -0.0
+   },
+   {
+    "site": "connecting-ridge",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 132.765149645,
+    "horizonsEl": 5.937427038,
+    "oursAz": 132.765149,
+    "oursEl": 5.937432,
+    "dAz": -1e-06,
+    "dEl": 5e-06
+   },
+   {
+    "site": "connecting-ridge",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Sun",
+    "horizonsAz": 148.642835505,
+    "horizonsEl": -0.118748358,
+    "oursAz": 148.642836,
+    "oursEl": -0.118745,
+    "dAz": 1e-06,
+    "dEl": 3e-06
+   },
+   {
+    "site": "connecting-ridge",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Earth",
+    "horizonsAz": 137.35868564,
+    "horizonsEl": -0.575112126,
+    "oursAz": 137.358694,
+    "oursEl": -0.575118,
+    "dAz": 9e-06,
+    "dEl": -6e-06
    },
    {
     "site": "shiv-shakti",
@@ -226,10 +315,10 @@
     "body": "Sun",
     "horizonsAz": 38.952029562,
     "horizonsEl": 16.52390283,
-    "oursAz": 38.95785,
-    "oursEl": 16.5228,
-    "dAz": 0.00582,
-    "dEl": -0.0011
+    "oursAz": 38.952028,
+    "oursEl": 16.523903,
+    "dAz": -1e-06,
+    "dEl": 0.0
    },
    {
     "site": "shiv-shakti",
@@ -237,36 +326,1749 @@
     "body": "Earth",
     "horizonsAz": 333.207648262,
     "horizonsEl": 12.563849954,
-    "oursAz": 333.20783,
-    "oursEl": 12.56389,
-    "dAz": 0.00019,
-    "dEl": 4e-05
+    "oursAz": 333.207647,
+    "oursEl": 12.563828,
+    "dAz": -1e-06,
+    "dEl": -2.1e-05
    },
    {
     "site": "shiv-shakti",
-    "utc": "2029-12-24T06:30:00Z",
+    "utc": "2027-09-01T12:00:00Z",
     "body": "Sun",
-    "horizonsAz": 282.859887014,
-    "horizonsEl": 4.58894674,
-    "oursAz": 282.86553,
-    "oursEl": 4.59082,
-    "dAz": 0.00565,
-    "dEl": 0.00188
+    "horizonsAz": 138.997778083,
+    "horizonsEl": -15.099273799,
+    "oursAz": 138.997779,
+    "oursEl": -15.099274,
+    "dAz": 1e-06,
+    "dEl": -0.0
    },
    {
     "site": "shiv-shakti",
-    "utc": "2029-12-24T06:30:00Z",
+    "utc": "2027-09-01T12:00:00Z",
     "body": "Earth",
-    "horizonsAz": 321.251647752,
-    "horizonsEl": 11.111979964,
-    "oursAz": 321.25188,
-    "oursEl": 11.11207,
-    "dAz": 0.00024,
-    "dEl": 9e-05
+    "horizonsAz": 330.438007762,
+    "horizonsEl": 13.581317394,
+    "oursAz": 330.438007,
+    "oursEl": 13.581313,
+    "dAz": -1e-06,
+    "dEl": -4e-06
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-07-03T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 152.159506006,
+    "horizonsEl": -19.227173219,
+    "oursAz": 152.159506,
+    "oursEl": -19.227173,
+    "dAz": 0.0,
+    "dEl": -0.0
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-07-03T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 322.262903999,
+    "horizonsEl": 20.727186656,
+    "oursAz": 322.262903,
+    "oursEl": 20.72719,
+    "dAz": -1e-06,
+    "dEl": 4e-06
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Sun",
+    "horizonsAz": 309.56847172,
+    "horizonsEl": 15.049038791,
+    "oursAz": 309.568472,
+    "oursEl": 15.049039,
+    "dAz": -0.0,
+    "dEl": -0.0
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-10-16T12:00:00Z",
+    "body": "Earth",
+    "horizonsAz": 319.552354616,
+    "horizonsEl": 22.475537873,
+    "oursAz": 319.552353,
+    "oursEl": 22.475542,
+    "dAz": -1e-06,
+    "dEl": 4e-06
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Sun",
+    "horizonsAz": 337.52586035,
+    "horizonsEl": 19.511704613,
+    "oursAz": 337.52586,
+    "oursEl": 19.511708,
+    "dAz": -0.0,
+    "dEl": 3e-06
+   },
+   {
+    "site": "shiv-shakti",
+    "utc": "2027-08-16T06:30:00Z",
+    "body": "Earth",
+    "horizonsAz": 325.844859169,
+    "horizonsEl": 17.124704751,
+    "oursAz": 325.844868,
+    "oursEl": 17.124701,
+    "dAz": 8e-06,
+    "dEl": -4e-06
    }
   ],
-  "worstAbsDiffDeg": 0.00593,
-  "tolerance": 0.05,
+  "dates": [
+   "2027-08-11T12:00:00Z",
+   "2027-09-01T12:00:00Z",
+   "2027-07-03T12:00:00Z",
+   "2027-10-16T12:00:00Z",
+   "2027-08-16T06:30:00Z"
+  ],
+  "sites": [
+   "mons-mouton",
+   "connecting-ridge",
+   "shiv-shakti"
+  ],
+  "worstAbsDiffDeg": 2.2e-05,
+  "toleranceDeg": 0.001,
   "status": "pass"
+ },
+ "benchmark": {
+  "reference": "NASA GSFC PGDA product 69: AVGVISIB_85S_060M_201608 (Sun) and _EARTH (share of hourly timesteps over 18.6 years with any fraction of the disc visible), computed by the LOLA team from LDEM_85S_060M with the method of Mazarico et al. (2011), Icarus 211, 1066-1081",
+  "referenceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+  "ours": "SPICE LT+S hourly over 18.6 years from 2010-01-01; horizon masks from LDEM 40/80/120 m at the published pixel centre, observer at the surface; sunlit when centre elevation + angular radius exceeds the horizon (any fraction of the disc)",
+  "differencesFrom": "DEM release and resolution (published 60 m, 2016; ours 40 m near field, 2017), 1 deg azimuth bins with a max over 5 sub-rays (ours, conservative), start of the 18.6-year window, near-field treatment",
+  "nearFieldM": 120.0,
+  "nearFieldSensitivity": {
+   "0": {
+    "sun": {
+     "n": 45,
+     "meanAbs": 5.67,
+     "medianAbs": 1.78,
+     "median": -1.78,
+     "bias": -5.54,
+     "rms": 9.94,
+     "maxAbs": 37.38
+    },
+    "earth": {
+     "n": 45,
+     "meanAbs": 1.78,
+     "medianAbs": 0.3,
+     "median": -0.25,
+     "bias": -1.63,
+     "rms": 3.39,
+     "maxAbs": 11.58
+    }
+   },
+   "120": {
+    "sun": {
+     "n": 45,
+     "meanAbs": 1.46,
+     "medianAbs": 0.97,
+     "median": -0.78,
+     "bias": -0.89,
+     "rms": 1.97,
+     "maxAbs": 5.82
+    },
+    "earth": {
+     "n": 45,
+     "meanAbs": 0.84,
+     "medianAbs": 0.24,
+     "median": -0.19,
+     "bias": 0.1,
+     "rms": 1.75,
+     "maxAbs": 7.4
+    }
+   },
+   "300": {
+    "sun": {
+     "n": 45,
+     "meanAbs": 2.15,
+     "medianAbs": 0.89,
+     "median": 0.0,
+     "bias": 1.54,
+     "rms": 3.67,
+     "maxAbs": 14.87
+    },
+    "earth": {
+     "n": 45,
+     "meanAbs": 1.07,
+     "medianAbs": 0.22,
+     "median": -0.16,
+     "bias": 0.64,
+     "rms": 2.39,
+     "maxAbs": 11.2
+    }
+   }
+  },
+  "sun": {
+   "all": {
+    "n": 45,
+    "meanAbs": 1.46,
+    "medianAbs": 0.97,
+    "median": -0.78,
+    "bias": -0.89,
+    "rms": 1.97,
+    "maxAbs": 5.82
+   },
+   "sites": {
+    "n": 6,
+    "meanAbs": 2.11,
+    "medianAbs": 1.48,
+    "median": -1.48,
+    "bias": -1.8,
+    "rms": 2.84,
+    "maxAbs": 5.82
+   },
+   "samples": {
+    "n": 39,
+    "meanAbs": 1.35,
+    "medianAbs": 0.89,
+    "median": -0.7,
+    "bias": -0.75,
+    "rms": 1.8,
+    "maxAbs": 5.16
+   }
+  },
+  "earth": {
+   "all": {
+    "n": 45,
+    "meanAbs": 0.84,
+    "medianAbs": 0.24,
+    "median": -0.19,
+    "bias": 0.1,
+    "rms": 1.75,
+    "maxAbs": 7.4
+   },
+   "sites": {
+    "n": 6,
+    "meanAbs": 0.48,
+    "medianAbs": 0.2,
+    "median": -0.2,
+    "bias": -0.46,
+    "rms": 0.91,
+    "maxAbs": 2.19
+   },
+   "samples": {
+    "n": 39,
+    "meanAbs": 0.9,
+    "medianAbs": 0.25,
+    "median": -0.18,
+    "bias": 0.19,
+    "rms": 1.85,
+    "maxAbs": 7.4
+   }
+  },
+  "rows": [
+   {
+    "id": "mons-mouton",
+    "name": "Mons Mouton (IM-2 Athena site)",
+    "kind": "site",
+    "lat": -84.7909,
+    "lon": 29.2067,
+    "publishedSunPct": 45.1,
+    "publishedEarthPct": 92.08,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 44.97,
+      "dSunPct": -0.13,
+      "oursEarthPct": 92.12,
+      "dEarthPct": 0.04
+     },
+     "120": {
+      "oursSunPct": 46.06,
+      "dSunPct": 0.95,
+      "oursEarthPct": 92.12,
+      "dEarthPct": 0.04
+     },
+     "300": {
+      "oursSunPct": 46.06,
+      "dSunPct": 0.95,
+      "oursEarthPct": 92.12,
+      "dEarthPct": 0.04
+     }
+    },
+    "oursSunPct": 46.06,
+    "dSunPct": 0.95,
+    "oursEarthPct": 92.12,
+    "dEarthPct": 0.04
+   },
+   {
+    "id": "connecting-ridge",
+    "name": "Connecting Ridge",
+    "kind": "site",
+    "lat": -89.4749,
+    "lon": -137.4431,
+    "publishedSunPct": 88.44,
+    "publishedEarthPct": 58.08,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 77.59,
+      "dSunPct": -10.86,
+      "oursEarthPct": 57.78,
+      "dEarthPct": -0.3
+     },
+     "120": {
+      "oursSunPct": 87.39,
+      "dSunPct": -1.06,
+      "oursEarthPct": 57.9,
+      "dEarthPct": -0.19
+     },
+     "300": {
+      "oursSunPct": 87.76,
+      "dSunPct": -0.69,
+      "oursEarthPct": 57.9,
+      "dEarthPct": -0.19
+     }
+    },
+    "oursSunPct": 87.39,
+    "dSunPct": -1.06,
+    "oursEarthPct": 57.9,
+    "dEarthPct": -0.19
+   },
+   {
+    "id": "shackleton-rim",
+    "name": "Shackleton rim",
+    "kind": "site",
+    "lat": -89.7843,
+    "lon": -155.9041,
+    "publishedSunPct": 85.46,
+    "publishedEarthPct": 56.68,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 77.0,
+      "dSunPct": -8.46,
+      "oursEarthPct": 56.1,
+      "dEarthPct": -0.58
+     },
+     "120": {
+      "oursSunPct": 82.5,
+      "dSunPct": -2.96,
+      "oursEarthPct": 56.44,
+      "dEarthPct": -0.24
+     },
+     "300": {
+      "oursSunPct": 87.17,
+      "dSunPct": 1.71,
+      "oursEarthPct": 56.44,
+      "dEarthPct": -0.24
+     }
+    },
+    "oursSunPct": 82.5,
+    "dSunPct": -2.96,
+    "oursEarthPct": 56.44,
+    "dEarthPct": -0.24
+   },
+   {
+    "id": "de-gerlache-rim",
+    "name": "de Gerlache rim",
+    "kind": "site",
+    "lat": -88.6646,
+    "lon": -68.3956,
+    "publishedSunPct": 82.69,
+    "publishedEarthPct": 61.42,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 80.79,
+      "dSunPct": -1.9,
+      "oursEarthPct": 61.19,
+      "dEarthPct": -0.23
+     },
+     "120": {
+      "oursSunPct": 80.79,
+      "dSunPct": -1.9,
+      "oursEarthPct": 61.22,
+      "dEarthPct": -0.2
+     },
+     "300": {
+      "oursSunPct": 83.01,
+      "dSunPct": 0.32,
+      "oursEarthPct": 61.22,
+      "dEarthPct": -0.2
+     }
+    },
+    "oursSunPct": 80.79,
+    "dSunPct": -1.9,
+    "oursEarthPct": 61.22,
+    "dEarthPct": -0.2
+   },
+   {
+    "id": "malapert-massif",
+    "name": "Malapert massif",
+    "kind": "site",
+    "lat": -86.0011,
+    "lon": 2.055,
+    "publishedSunPct": 81.89,
+    "publishedEarthPct": 58.7,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 58.48,
+      "dSunPct": -23.42,
+      "oursEarthPct": 56.45,
+      "dEarthPct": -2.25
+     },
+     "120": {
+      "oursSunPct": 76.07,
+      "dSunPct": -5.82,
+      "oursEarthPct": 56.51,
+      "dEarthPct": -2.19
+     },
+     "300": {
+      "oursSunPct": 80.74,
+      "dSunPct": -1.16,
+      "oursEarthPct": 58.78,
+      "dEarthPct": 0.08
+     }
+    },
+    "oursSunPct": 76.07,
+    "dSunPct": -5.82,
+    "oursEarthPct": 56.51,
+    "dEarthPct": -2.19
+   },
+   {
+    "id": "shackleton-floor",
+    "name": "Shackleton crater floor (shadow reference)",
+    "kind": "site",
+    "lat": -89.6698,
+    "lon": 129.6517,
+    "publishedSunPct": 0.0,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 0.0,
+    "dSunPct": 0.0,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-01",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.3905,
+    "lon": 129.9634,
+    "publishedSunPct": 18.7,
+    "publishedEarthPct": 4.17,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 17.83,
+      "dSunPct": -0.87,
+      "oursEarthPct": 3.19,
+      "dEarthPct": -0.98
+     },
+     "120": {
+      "oursSunPct": 17.83,
+      "dSunPct": -0.87,
+      "oursEarthPct": 3.19,
+      "dEarthPct": -0.98
+     },
+     "300": {
+      "oursSunPct": 17.83,
+      "dSunPct": -0.87,
+      "oursEarthPct": 3.19,
+      "dEarthPct": -0.98
+     }
+    },
+    "oursSunPct": 17.83,
+    "dSunPct": -0.87,
+    "oursEarthPct": 3.19,
+    "dEarthPct": -0.98
+   },
+   {
+    "id": "sample-02",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.6174,
+    "lon": -116.1067,
+    "publishedSunPct": 16.5,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 15.8,
+      "dSunPct": -0.7,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 15.8,
+      "dSunPct": -0.7,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 15.8,
+      "dSunPct": -0.7,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 15.8,
+    "dSunPct": -0.7,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-03",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.9335,
+    "lon": 153.8397,
+    "publishedSunPct": 45.86,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 47.14,
+      "dSunPct": 1.28,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 47.14,
+      "dSunPct": 1.28,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 49.12,
+      "dSunPct": 3.27,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 47.14,
+    "dSunPct": 1.28,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-04",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.7954,
+    "lon": -143.3923,
+    "publishedSunPct": 24.3,
+    "publishedEarthPct": 32.53,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 23.52,
+      "dSunPct": -0.78,
+      "oursEarthPct": 32.56,
+      "dEarthPct": 0.03
+     },
+     "120": {
+      "oursSunPct": 23.52,
+      "dSunPct": -0.78,
+      "oursEarthPct": 32.56,
+      "dEarthPct": 0.03
+     },
+     "300": {
+      "oursSunPct": 23.52,
+      "dSunPct": -0.78,
+      "oursEarthPct": 32.56,
+      "dEarthPct": 0.03
+     }
+    },
+    "oursSunPct": 23.52,
+    "dSunPct": -0.78,
+    "oursEarthPct": 32.56,
+    "dEarthPct": 0.03
+   },
+   {
+    "id": "sample-05",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.9711,
+    "lon": 48.5083,
+    "publishedSunPct": 24.36,
+    "publishedEarthPct": 55.98,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 22.58,
+      "dSunPct": -1.79,
+      "oursEarthPct": 55.76,
+      "dEarthPct": -0.22
+     },
+     "120": {
+      "oursSunPct": 22.63,
+      "dSunPct": -1.74,
+      "oursEarthPct": 55.76,
+      "dEarthPct": -0.22
+     },
+     "300": {
+      "oursSunPct": 23.58,
+      "dSunPct": -0.78,
+      "oursEarthPct": 55.76,
+      "dEarthPct": -0.22
+     }
+    },
+    "oursSunPct": 22.63,
+    "dSunPct": -1.74,
+    "oursEarthPct": 55.76,
+    "dEarthPct": -0.22
+   },
+   {
+    "id": "sample-06",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.9432,
+    "lon": -147.3067,
+    "publishedSunPct": 25.83,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 24.95,
+      "dSunPct": -0.88,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 24.95,
+      "dSunPct": -0.88,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 24.95,
+      "dSunPct": -0.88,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 24.95,
+    "dSunPct": -0.88,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-07",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.0188,
+    "lon": 80.7751,
+    "publishedSunPct": 3.54,
+    "publishedEarthPct": 44.24,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 2.26,
+      "dSunPct": -1.28,
+      "oursEarthPct": 39.04,
+      "dEarthPct": -5.2
+     },
+     "120": {
+      "oursSunPct": 4.11,
+      "dSunPct": 0.57,
+      "oursEarthPct": 45.28,
+      "dEarthPct": 1.04
+     },
+     "300": {
+      "oursSunPct": 10.86,
+      "dSunPct": 7.32,
+      "oursEarthPct": 46.9,
+      "dEarthPct": 2.66
+     }
+    },
+    "oursSunPct": 4.11,
+    "dSunPct": 0.57,
+    "oursEarthPct": 45.28,
+    "dEarthPct": 1.04
+   },
+   {
+    "id": "sample-08",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.6463,
+    "lon": 58.0533,
+    "publishedSunPct": 0.0,
+    "publishedEarthPct": 23.32,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 23.01,
+      "dEarthPct": -0.31
+     },
+     "120": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 23.01,
+      "dEarthPct": -0.31
+     },
+     "300": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 23.01,
+      "dEarthPct": -0.31
+     }
+    },
+    "oursSunPct": 0.0,
+    "dSunPct": 0.0,
+    "oursEarthPct": 23.01,
+    "dEarthPct": -0.31
+   },
+   {
+    "id": "sample-09",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -86.6653,
+    "lon": -44.5914,
+    "publishedSunPct": 35.62,
+    "publishedEarthPct": 62.19,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 36.02,
+      "dSunPct": 0.41,
+      "oursEarthPct": 62.02,
+      "dEarthPct": -0.18
+     },
+     "120": {
+      "oursSunPct": 36.06,
+      "dSunPct": 0.44,
+      "oursEarthPct": 62.02,
+      "dEarthPct": -0.18
+     },
+     "300": {
+      "oursSunPct": 36.06,
+      "dSunPct": 0.44,
+      "oursEarthPct": 62.02,
+      "dEarthPct": -0.18
+     }
+    },
+    "oursSunPct": 36.06,
+    "dSunPct": 0.44,
+    "oursEarthPct": 62.02,
+    "dEarthPct": -0.18
+   },
+   {
+    "id": "sample-10",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.0223,
+    "lon": -5.1944,
+    "publishedSunPct": 0.0,
+    "publishedEarthPct": 32.89,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 32.68,
+      "dEarthPct": -0.21
+     },
+     "120": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 32.68,
+      "dEarthPct": -0.21
+     },
+     "300": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 32.68,
+      "dEarthPct": -0.21
+     }
+    },
+    "oursSunPct": 0.0,
+    "dSunPct": 0.0,
+    "oursEarthPct": 32.68,
+    "dEarthPct": -0.21
+   },
+   {
+    "id": "sample-11",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.005,
+    "lon": -41.695,
+    "publishedSunPct": 0.0,
+    "publishedEarthPct": 0.24,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.16,
+      "dEarthPct": -0.08
+     },
+     "120": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.16,
+      "dEarthPct": -0.08
+     },
+     "300": {
+      "oursSunPct": 0.0,
+      "dSunPct": 0.0,
+      "oursEarthPct": 0.16,
+      "dEarthPct": -0.08
+     }
+    },
+    "oursSunPct": 0.0,
+    "dSunPct": 0.0,
+    "oursEarthPct": 0.16,
+    "dEarthPct": -0.08
+   },
+   {
+    "id": "sample-12",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.396,
+    "lon": 13.7363,
+    "publishedSunPct": 10.74,
+    "publishedEarthPct": 39.41,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 10.36,
+      "dSunPct": -0.38,
+      "oursEarthPct": 40.21,
+      "dEarthPct": 0.8
+     },
+     "120": {
+      "oursSunPct": 10.36,
+      "dSunPct": -0.38,
+      "oursEarthPct": 40.21,
+      "dEarthPct": 0.8
+     },
+     "300": {
+      "oursSunPct": 10.36,
+      "dSunPct": -0.38,
+      "oursEarthPct": 40.99,
+      "dEarthPct": 1.59
+     }
+    },
+    "oursSunPct": 10.36,
+    "dSunPct": -0.38,
+    "oursEarthPct": 40.21,
+    "dEarthPct": 0.8
+   },
+   {
+    "id": "sample-13",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.7614,
+    "lon": -113.5177,
+    "publishedSunPct": 31.09,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 29.91,
+      "dSunPct": -1.19,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 30.21,
+      "dSunPct": -0.89,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 30.21,
+      "dSunPct": -0.89,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 30.21,
+    "dSunPct": -0.89,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-14",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.0471,
+    "lon": 70.6839,
+    "publishedSunPct": 16.36,
+    "publishedEarthPct": 50.54,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 17.04,
+      "dSunPct": 0.68,
+      "oursEarthPct": 50.21,
+      "dEarthPct": -0.33
+     },
+     "120": {
+      "oursSunPct": 17.22,
+      "dSunPct": 0.86,
+      "oursEarthPct": 50.21,
+      "dEarthPct": -0.33
+     },
+     "300": {
+      "oursSunPct": 18.2,
+      "dSunPct": 1.85,
+      "oursEarthPct": 50.21,
+      "dEarthPct": -0.33
+     }
+    },
+    "oursSunPct": 17.22,
+    "dSunPct": 0.86,
+    "oursEarthPct": 50.21,
+    "dEarthPct": -0.33
+   },
+   {
+    "id": "sample-15",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.9916,
+    "lon": -165.8885,
+    "publishedSunPct": 37.09,
+    "publishedEarthPct": 44.99,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 32.69,
+      "dSunPct": -4.4,
+      "oursEarthPct": 44.83,
+      "dEarthPct": -0.16
+     },
+     "120": {
+      "oursSunPct": 33.85,
+      "dSunPct": -3.24,
+      "oursEarthPct": 44.83,
+      "dEarthPct": -0.16
+     },
+     "300": {
+      "oursSunPct": 36.33,
+      "dSunPct": -0.76,
+      "oursEarthPct": 44.83,
+      "dEarthPct": -0.16
+     }
+    },
+    "oursSunPct": 33.85,
+    "dSunPct": -3.24,
+    "oursEarthPct": 44.83,
+    "dEarthPct": -0.16
+   },
+   {
+    "id": "sample-16",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.4404,
+    "lon": 16.3198,
+    "publishedSunPct": 27.09,
+    "publishedEarthPct": 51.46,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 7.67,
+      "dSunPct": -19.41,
+      "oursEarthPct": 46.51,
+      "dEarthPct": -4.96
+     },
+     "120": {
+      "oursSunPct": 24.81,
+      "dSunPct": -2.27,
+      "oursEarthPct": 51.91,
+      "dEarthPct": 0.45
+     },
+     "300": {
+      "oursSunPct": 26.52,
+      "dSunPct": -0.57,
+      "oursEarthPct": 51.91,
+      "dEarthPct": 0.45
+     }
+    },
+    "oursSunPct": 24.81,
+    "dSunPct": -2.27,
+    "oursEarthPct": 51.91,
+    "dEarthPct": 0.45
+   },
+   {
+    "id": "sample-17",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.4892,
+    "lon": -62.5768,
+    "publishedSunPct": 27.06,
+    "publishedEarthPct": 42.14,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 26.52,
+      "dSunPct": -0.54,
+      "oursEarthPct": 41.99,
+      "dEarthPct": -0.15
+     },
+     "120": {
+      "oursSunPct": 26.52,
+      "dSunPct": -0.54,
+      "oursEarthPct": 41.99,
+      "dEarthPct": -0.15
+     },
+     "300": {
+      "oursSunPct": 26.52,
+      "dSunPct": -0.54,
+      "oursEarthPct": 41.99,
+      "dEarthPct": -0.15
+     }
+    },
+    "oursSunPct": 26.52,
+    "dSunPct": -0.54,
+    "oursEarthPct": 41.99,
+    "dEarthPct": -0.15
+   },
+   {
+    "id": "sample-18",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.8342,
+    "lon": -51.565,
+    "publishedSunPct": 14.43,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 13.89,
+      "dSunPct": -0.54,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 13.89,
+      "dSunPct": -0.54,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 13.89,
+      "dSunPct": -0.54,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 13.89,
+    "dSunPct": -0.54,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-19",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.8716,
+    "lon": -80.9886,
+    "publishedSunPct": 42.14,
+    "publishedEarthPct": 58.26,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 41.52,
+      "dSunPct": -0.61,
+      "oursEarthPct": 58.0,
+      "dEarthPct": -0.27
+     },
+     "120": {
+      "oursSunPct": 41.52,
+      "dSunPct": -0.61,
+      "oursEarthPct": 58.0,
+      "dEarthPct": -0.27
+     },
+     "300": {
+      "oursSunPct": 41.56,
+      "dSunPct": -0.58,
+      "oursEarthPct": 58.0,
+      "dEarthPct": -0.27
+     }
+    },
+    "oursSunPct": 41.52,
+    "dSunPct": -0.61,
+    "oursEarthPct": 58.0,
+    "dEarthPct": -0.27
+   },
+   {
+    "id": "sample-20",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.3208,
+    "lon": 143.1343,
+    "publishedSunPct": 37.3,
+    "publishedEarthPct": 24.52,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 35.51,
+      "dSunPct": -1.78,
+      "oursEarthPct": 19.34,
+      "dEarthPct": -5.18
+     },
+     "120": {
+      "oursSunPct": 36.02,
+      "dSunPct": -1.27,
+      "oursEarthPct": 24.28,
+      "dEarthPct": -0.24
+     },
+     "300": {
+      "oursSunPct": 36.67,
+      "dSunPct": -0.62,
+      "oursEarthPct": 24.28,
+      "dEarthPct": -0.24
+     }
+    },
+    "oursSunPct": 36.02,
+    "dSunPct": -1.27,
+    "oursEarthPct": 24.28,
+    "dEarthPct": -0.24
+   },
+   {
+    "id": "sample-21",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.7781,
+    "lon": -174.3021,
+    "publishedSunPct": 36.89,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 34.03,
+      "dSunPct": -2.85,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 36.32,
+      "dSunPct": -0.57,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 39.13,
+      "dSunPct": 2.24,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 36.32,
+    "dSunPct": -0.57,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-22",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.1856,
+    "lon": 133.2341,
+    "publishedSunPct": 52.78,
+    "publishedEarthPct": 37.28,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 53.4,
+      "dSunPct": 0.62,
+      "oursEarthPct": 32.46,
+      "dEarthPct": -4.81
+     },
+     "120": {
+      "oursSunPct": 54.46,
+      "dSunPct": 1.67,
+      "oursEarthPct": 43.59,
+      "dEarthPct": 6.31
+     },
+     "300": {
+      "oursSunPct": 62.63,
+      "dSunPct": 9.85,
+      "oursEarthPct": 48.48,
+      "dEarthPct": 11.2
+     }
+    },
+    "oursSunPct": 54.46,
+    "dSunPct": 1.67,
+    "oursEarthPct": 43.59,
+    "dEarthPct": 6.31
+   },
+   {
+    "id": "sample-23",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.7025,
+    "lon": -157.7084,
+    "publishedSunPct": 47.01,
+    "publishedEarthPct": 0.0,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 43.59,
+      "dSunPct": -3.41,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "120": {
+      "oursSunPct": 44.9,
+      "dSunPct": -2.11,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     },
+     "300": {
+      "oursSunPct": 48.81,
+      "dSunPct": 1.81,
+      "oursEarthPct": 0.0,
+      "dEarthPct": 0.0
+     }
+    },
+    "oursSunPct": 44.9,
+    "dSunPct": -2.11,
+    "oursEarthPct": 0.0,
+    "dEarthPct": 0.0
+   },
+   {
+    "id": "sample-24",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -86.7199,
+    "lon": 134.8045,
+    "publishedSunPct": 46.86,
+    "publishedEarthPct": 20.41,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 45.36,
+      "dSunPct": -1.5,
+      "oursEarthPct": 18.23,
+      "dEarthPct": -2.18
+     },
+     "120": {
+      "oursSunPct": 45.83,
+      "dSunPct": -1.03,
+      "oursEarthPct": 18.23,
+      "dEarthPct": -2.18
+     },
+     "300": {
+      "oursSunPct": 46.45,
+      "dSunPct": -0.41,
+      "oursEarthPct": 18.23,
+      "dEarthPct": -2.18
+     }
+    },
+    "oursSunPct": 45.83,
+    "dSunPct": -1.03,
+    "oursEarthPct": 18.23,
+    "dEarthPct": -2.18
+   },
+   {
+    "id": "sample-25",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -86.8999,
+    "lon": 140.5151,
+    "publishedSunPct": 57.52,
+    "publishedEarthPct": 46.01,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 56.66,
+      "dSunPct": -0.86,
+      "oursEarthPct": 45.58,
+      "dEarthPct": -0.43
+     },
+     "120": {
+      "oursSunPct": 56.99,
+      "dSunPct": -0.53,
+      "oursEarthPct": 45.72,
+      "dEarthPct": -0.29
+     },
+     "300": {
+      "oursSunPct": 56.99,
+      "dSunPct": -0.53,
+      "oursEarthPct": 45.72,
+      "dEarthPct": -0.29
+     }
+    },
+    "oursSunPct": 56.99,
+    "dSunPct": -0.53,
+    "oursEarthPct": 45.72,
+    "dEarthPct": -0.29
+   },
+   {
+    "id": "sample-26",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.8323,
+    "lon": 122.5457,
+    "publishedSunPct": 59.22,
+    "publishedEarthPct": 60.55,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 48.61,
+      "dSunPct": -10.6,
+      "oursEarthPct": 58.68,
+      "dEarthPct": -1.87
+     },
+     "120": {
+      "oursSunPct": 57.98,
+      "dSunPct": -1.24,
+      "oursEarthPct": 60.29,
+      "dEarthPct": -0.26
+     },
+     "300": {
+      "oursSunPct": 61.26,
+      "dSunPct": 2.05,
+      "oursEarthPct": 60.29,
+      "dEarthPct": -0.26
+     }
+    },
+    "oursSunPct": 57.98,
+    "dSunPct": -1.24,
+    "oursEarthPct": 60.29,
+    "dEarthPct": -0.26
+   },
+   {
+    "id": "sample-27",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.5348,
+    "lon": 137.8949,
+    "publishedSunPct": 57.16,
+    "publishedEarthPct": 37.32,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 55.26,
+      "dSunPct": -1.9,
+      "oursEarthPct": 34.49,
+      "dEarthPct": -2.83
+     },
+     "120": {
+      "oursSunPct": 58.13,
+      "dSunPct": 0.97,
+      "oursEarthPct": 44.72,
+      "dEarthPct": 7.4
+     },
+     "300": {
+      "oursSunPct": 58.13,
+      "dSunPct": 0.97,
+      "oursEarthPct": 44.72,
+      "dEarthPct": 7.4
+     }
+    },
+    "oursSunPct": 58.13,
+    "dSunPct": 0.97,
+    "oursEarthPct": 44.72,
+    "dEarthPct": 7.4
+   },
+   {
+    "id": "sample-28",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.6473,
+    "lon": 96.9308,
+    "publishedSunPct": 54.81,
+    "publishedEarthPct": 50.16,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 52.74,
+      "dSunPct": -2.07,
+      "oursEarthPct": 49.92,
+      "dEarthPct": -0.25
+     },
+     "120": {
+      "oursSunPct": 53.55,
+      "dSunPct": -1.26,
+      "oursEarthPct": 49.92,
+      "dEarthPct": -0.25
+     },
+     "300": {
+      "oursSunPct": 53.81,
+      "dSunPct": -1.01,
+      "oursEarthPct": 49.92,
+      "dEarthPct": -0.25
+     }
+    },
+    "oursSunPct": 53.55,
+    "dSunPct": -1.26,
+    "oursEarthPct": 49.92,
+    "dEarthPct": -0.25
+   },
+   {
+    "id": "sample-29",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.59,
+    "lon": -67.9522,
+    "publishedSunPct": 74.71,
+    "publishedEarthPct": 58.04,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 74.05,
+      "dSunPct": -0.66,
+      "oursEarthPct": 60.6,
+      "dEarthPct": 2.57
+     },
+     "120": {
+      "oursSunPct": 79.03,
+      "dSunPct": 4.32,
+      "oursEarthPct": 61.0,
+      "dEarthPct": 2.96
+     },
+     "300": {
+      "oursSunPct": 82.06,
+      "dSunPct": 7.35,
+      "oursEarthPct": 61.36,
+      "dEarthPct": 3.33
+     }
+    },
+    "oursSunPct": 79.03,
+    "dSunPct": 4.32,
+    "oursEarthPct": 61.0,
+    "dEarthPct": 2.96
+   },
+   {
+    "id": "sample-30",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.3166,
+    "lon": -114.0046,
+    "publishedSunPct": 74.89,
+    "publishedEarthPct": 58.65,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 56.37,
+      "dSunPct": -18.52,
+      "oursEarthPct": 58.43,
+      "dEarthPct": -0.22
+     },
+     "120": {
+      "oursSunPct": 73.49,
+      "dSunPct": -1.4,
+      "oursEarthPct": 58.43,
+      "dEarthPct": -0.22
+     },
+     "300": {
+      "oursSunPct": 80.8,
+      "dSunPct": 5.9,
+      "oursEarthPct": 58.43,
+      "dEarthPct": -0.22
+     }
+    },
+    "oursSunPct": 73.49,
+    "dSunPct": -1.4,
+    "oursEarthPct": 58.43,
+    "dEarthPct": -0.22
+   },
+   {
+    "id": "sample-31",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.6786,
+    "lon": -68.5252,
+    "publishedSunPct": 64.73,
+    "publishedEarthPct": 47.4,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 50.42,
+      "dSunPct": -14.31,
+      "oursEarthPct": 36.87,
+      "dEarthPct": -10.53
+     },
+     "120": {
+      "oursSunPct": 64.52,
+      "dSunPct": -0.2,
+      "oursEarthPct": 49.6,
+      "dEarthPct": 2.2
+     },
+     "300": {
+      "oursSunPct": 70.62,
+      "dSunPct": 5.89,
+      "oursEarthPct": 51.43,
+      "dEarthPct": 4.03
+     }
+    },
+    "oursSunPct": 64.52,
+    "dSunPct": -0.2,
+    "oursEarthPct": 49.6,
+    "dEarthPct": 2.2
+   },
+   {
+    "id": "sample-32",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.6742,
+    "lon": -68.5082,
+    "publishedSunPct": 68.17,
+    "publishedEarthPct": 50.61,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 48.08,
+      "dSunPct": -20.09,
+      "oursEarthPct": 39.03,
+      "dEarthPct": -11.58
+     },
+     "120": {
+      "oursSunPct": 63.01,
+      "dSunPct": -5.16,
+      "oursEarthPct": 48.93,
+      "dEarthPct": -1.68
+     },
+     "300": {
+      "oursSunPct": 74.39,
+      "dSunPct": 6.22,
+      "oursEarthPct": 55.03,
+      "dEarthPct": 4.42
+     }
+    },
+    "oursSunPct": 63.01,
+    "dSunPct": -5.16,
+    "oursEarthPct": 48.93,
+    "dEarthPct": -1.68
+   },
+   {
+    "id": "sample-33",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.8067,
+    "lon": 123.5715,
+    "publishedSunPct": 71.99,
+    "publishedEarthPct": 57.05,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 65.38,
+      "dSunPct": -6.61,
+      "oursEarthPct": 53.58,
+      "dEarthPct": -3.46
+     },
+     "120": {
+      "oursSunPct": 68.78,
+      "dSunPct": -3.21,
+      "oursEarthPct": 56.19,
+      "dEarthPct": -0.86
+     },
+     "300": {
+      "oursSunPct": 86.86,
+      "dSunPct": 14.87,
+      "oursEarthPct": 60.37,
+      "dEarthPct": 3.33
+     }
+    },
+    "oursSunPct": 68.78,
+    "dSunPct": -3.21,
+    "oursEarthPct": 56.19,
+    "dEarthPct": -0.86
+   },
+   {
+    "id": "sample-34",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -87.9024,
+    "lon": -163.8727,
+    "publishedSunPct": 63.94,
+    "publishedEarthPct": 44.63,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 60.8,
+      "dSunPct": -3.13,
+      "oursEarthPct": 44.46,
+      "dEarthPct": -0.17
+     },
+     "120": {
+      "oursSunPct": 64.79,
+      "dSunPct": 0.85,
+      "oursEarthPct": 44.46,
+      "dEarthPct": -0.17
+     },
+     "300": {
+      "oursSunPct": 67.42,
+      "dSunPct": 3.49,
+      "oursEarthPct": 44.46,
+      "dEarthPct": -0.17
+     }
+    },
+    "oursSunPct": 64.79,
+    "dSunPct": 0.85,
+    "oursEarthPct": 44.46,
+    "dEarthPct": -0.17
+   },
+   {
+    "id": "sample-35",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.3158,
+    "lon": -114.156,
+    "publishedSunPct": 79.45,
+    "publishedEarthPct": 58.65,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 60.97,
+      "dSunPct": -18.48,
+      "oursEarthPct": 51.83,
+      "dEarthPct": -6.82
+     },
+     "120": {
+      "oursSunPct": 77.45,
+      "dSunPct": -2.0,
+      "oursEarthPct": 58.43,
+      "dEarthPct": -0.22
+     },
+     "300": {
+      "oursSunPct": 80.82,
+      "dSunPct": 1.37,
+      "oursEarthPct": 58.43,
+      "dEarthPct": -0.22
+     }
+    },
+    "oursSunPct": 77.45,
+    "dSunPct": -2.0,
+    "oursEarthPct": 58.43,
+    "dEarthPct": -0.22
+   },
+   {
+    "id": "sample-36",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -88.6646,
+    "lon": -68.3956,
+    "publishedSunPct": 82.69,
+    "publishedEarthPct": 61.42,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 80.79,
+      "dSunPct": -1.9,
+      "oursEarthPct": 61.19,
+      "dEarthPct": -0.23
+     },
+     "120": {
+      "oursSunPct": 80.79,
+      "dSunPct": -1.9,
+      "oursEarthPct": 61.22,
+      "dEarthPct": -0.2
+     },
+     "300": {
+      "oursSunPct": 83.01,
+      "dSunPct": 0.32,
+      "oursEarthPct": 61.22,
+      "dEarthPct": -0.2
+     }
+    },
+    "oursSunPct": 80.79,
+    "dSunPct": -1.9,
+    "oursEarthPct": 61.22,
+    "dEarthPct": -0.2
+   },
+   {
+    "id": "sample-37",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.6877,
+    "lon": -162.4835,
+    "publishedSunPct": 84.4,
+    "publishedEarthPct": 53.63,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 72.52,
+      "dSunPct": -11.88,
+      "oursEarthPct": 53.25,
+      "dEarthPct": -0.38
+     },
+     "120": {
+      "oursSunPct": 85.15,
+      "dSunPct": 0.75,
+      "oursEarthPct": 53.25,
+      "dEarthPct": -0.38
+     },
+     "300": {
+      "oursSunPct": 88.17,
+      "dSunPct": 3.77,
+      "oursEarthPct": 53.25,
+      "dEarthPct": -0.38
+     }
+    },
+    "oursSunPct": 85.15,
+    "dSunPct": 0.75,
+    "oursEarthPct": 53.25,
+    "dEarthPct": -0.38
+   },
+   {
+    "id": "sample-38",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.7363,
+    "lon": -159.1168,
+    "publishedSunPct": 77.24,
+    "publishedEarthPct": 42.38,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 39.85,
+      "dSunPct": -37.38,
+      "oursEarthPct": 33.32,
+      "dEarthPct": -9.06
+     },
+     "120": {
+      "oursSunPct": 73.21,
+      "dSunPct": -4.03,
+      "oursEarthPct": 38.87,
+      "dEarthPct": -3.52
+     },
+     "300": {
+      "oursSunPct": 76.22,
+      "dSunPct": -1.02,
+      "oursEarthPct": 40.97,
+      "dEarthPct": -1.41
+     }
+    },
+    "oursSunPct": 73.21,
+    "dSunPct": -4.03,
+    "oursEarthPct": 38.87,
+    "dEarthPct": -3.52
+   },
+   {
+    "id": "sample-39",
+    "name": "sample pixel",
+    "kind": "sample",
+    "lat": -89.6864,
+    "lon": -162.9371,
+    "publishedSunPct": 87.06,
+    "publishedEarthPct": 53.75,
+    "byNearFieldM": {
+     "0": {
+      "oursSunPct": 70.84,
+      "dSunPct": -16.22,
+      "oursEarthPct": 53.32,
+      "dEarthPct": -0.43
+     },
+     "120": {
+      "oursSunPct": 85.3,
+      "dSunPct": -1.76,
+      "oursEarthPct": 53.33,
+      "dEarthPct": -0.42
+     },
+     "300": {
+      "oursSunPct": 88.12,
+      "dSunPct": 1.06,
+      "oursEarthPct": 53.33,
+      "dEarthPct": -0.42
+     }
+    },
+    "oursSunPct": 85.3,
+    "dSunPct": -1.76,
+    "oursEarthPct": 53.33,
+    "dEarthPct": -0.42
+   }
+  ],
+  "generatedUtc": "2026-11-15T06:20:05Z"
+ },
+ "config": {
+  "toleranceDeg": 0.27,
+  "stepMin": 10,
+  "toleranceRationale": "0.27 deg is the Sun's angular radius: inside this band the solar disc is partly cut by terrain, and it is also the scale of error expected from 1-degree azimuth bins and 40-120 m DEM cells. Samples inside the band are classified 'uncertain', not visible or obstructed. The same band is applied to Earth.",
+  "observerHeightM": 2.0,
+  "sweep": {
+   "startUtc": "2027-07-03T12:00:00Z",
+   "stepDays": 3,
+   "count": 36,
+   "durationDays": 10
+  },
+  "nearFieldM": 120.0,
+  "nearFieldRationale": "Terrain closer than 120 m (three 40 m DEM cells) is treated as the landing spot itself, not as horizon. At grazing Sun angles, metre-scale relief inside this distance dominates the horizon on ridge crests, yet the DEM does not resolve it reliably and lander placement controls it. 120 m gave the best agreement with the published LOLA illumination maps (see benchmark)."
+ },
+ "summary": {
+  "passed": 12,
+  "failed": 0,
+  "notRun": 0,
+  "total": 12
  }
 }

@@ -1,15 +1,26 @@
-# Selenix: Lunar Mission Decision-Support Navigator
+# SELENIX
 
-NASA Space Apps 2026 hackathon MVP for lunar south-pole mission planners who are not
-celestial-mechanics specialists. It turns Sun and Earth geometry and LOLA terrain into plain-language
-mission consequences: power, darkness survival and direct-to-Earth contact. You can compare up to three
-site/date scenarios on a mission-elapsed-time axis. Every number opens an evidence record.
+**Navigate lunar data. Plan with clarity.**
 
-> Demo question: *"Our launch slipped 3 weeks. Does our site still work, and is there a better option?"*
+SELENIX is a lunar mission-planning and analysis prototype (NASA Space Apps 2026). It compares
+lunar south-pole landing sites and dates: when the Sun and Earth are visible above the real terrain,
+what that means for darkness, power estimates and direct-to-Earth geometry, and what changes when a
+launch slips. Every number opens its evidence.
 
-**Open the app:** `lunar-navigator/dist/index.html`. It is one self-contained file and works offline.
-The GitHub Pages workflow publishes it on every push to `main` once Pages is enabled
-(Settings → Pages → Source: GitHub Actions).
+> Demo question: *"Our launch slipped three weeks. Does our site still work, and what does each
+> alternative cost?"*
 
-See [`lunar-navigator/README.md`](lunar-navigator/README.md) for the architecture, conventions, how to
-regenerate the data, and validation results.
+| | |
+|---|---|
+| Landing page | `lunar-navigator/dist/index.html` |
+| Platform (guided demo and workspace) | `lunar-navigator/dist/app/index.html` (one self-contained file, works offline) |
+| Architecture, conventions, validation | [`lunar-navigator/README.md`](lunar-navigator/README.md) |
+| Adapter interface and schemas | [`lunar-navigator/docs/INTERFACES.md`](lunar-navigator/docs/INTERFACES.md) |
+| V0.2 change-spec status | [`lunar-navigator/docs/CHANGE_SPEC_STATUS.md`](lunar-navigator/docs/CHANGE_SPEC_STATUS.md) |
+
+## Put it online
+
+- **Vercel:** import this repository at vercel.com. `vercel.json` already points at
+  `lunar-navigator/dist` with no build step, so the first deploy is the live site.
+- **GitHub Pages:** Settings → Pages → Source: *GitHub Actions*. The included workflow runs the
+  regression test, rebuilds and publishes on every push to `main`.

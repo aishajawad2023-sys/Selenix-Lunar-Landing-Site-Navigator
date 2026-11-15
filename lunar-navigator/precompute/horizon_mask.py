@@ -119,7 +119,7 @@ def distances(max_km, base_m):
     return np.array(out)
 
 
-def compute_mask(md, lat, lon, observer_h=2.0, max_km=200.0, sub=5):
+def compute_mask(md, lat, lon, observer_h=2.0, max_km=200.0, sub=5, near_m=0.0):
     z_site, res_site = md.height(np.array([lat]), np.array([lon]))
     if np.isnan(z_site[0]):
         raise ValueError("site outside DEM coverage")
@@ -127,6 +127,7 @@ def compute_mask(md, lat, lon, observer_h=2.0, max_km=200.0, sub=5):
     _, _, up = enu_basis(lat, lon)
     S = up * (R_M + z0)
     d = distances(max_km, res_site[0])
+    d = d[d >= near_m]  # near-field exclusion: terrain closer than near_m is treated as the site itself
     mask = np.zeros(360)
     reach = np.zeros(360)
     for k in range(360):
@@ -206,9 +207,14 @@ def main():
     ap.add_argument("--plots", default=None)
     ap.add_argument("--only", default=None)
     ap.add_argument("--max-km", type=float, default=200.0)
+    ap.add_argument("--near-m", type=float, default=None, help="near-field exclusion in metres (default: data/config.json nearFieldM)")
+    ap.add_argument("--observer-m", type=float, default=None)
     a = ap.parse_args()
     dems = [Dem(os.path.join(a.dem_dir, f)) for f in sorted(os.listdir(a.dem_dir)) if f.endswith(".IMG")]
     md = MultiDem(dems)
+    cfg = json.load(open(os.path.join(root, "data", "config.json")))
+    near_m = cfg.get("nearFieldM", 0.0) if a.near_m is None else a.near_m
+    obs_m = cfg.get("observerHeightM", 2.0) if a.observer_m is None else a.observer_m
     sites = json.load(open(a.sites))
     os.makedirs(a.out, exist_ok=True)
     if a.plots:
@@ -224,7 +230,7 @@ def main():
             s["lat"], s["lon"] = round(la, 4), round(lo, 4)
             s["refine"]["done"] = True
         try:
-            mask, z, res, reach = compute_mask(md, s["lat"], s["lon"], max_km=a.max_km)
+            mask, z, res, reach = compute_mask(md, s["lat"], s["lon"], observer_h=obs_m, max_km=a.max_km, near_m=near_m)
         except ValueError as ex:
             print(s["id"], "skipped:", ex)
             s["hasTerrainMask"] = False
@@ -236,7 +242,8 @@ def main():
             "azConvention": "0=N, clockwise",
             "stepDeg": 1,
             "maskDeg": [round(float(m), 3) for m in mask],
-            "observerHeightM": 2.0,
+            "observerHeightM": obs_m,
+            "nearFieldM": near_m,
             "siteHeightM": round(float(z), 1),
             "siteLat": s["lat"],
             "siteLon": s["lon"],
@@ -250,7 +257,8 @@ def main():
                 "source": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/",
             },
             "method": "radial max elevation angle with curvature correction (exact 3-D, sphere "
-                      "R=1737.4 km), finest DEM per sample, 5 sub-rays per 1 deg bin (max)",
+                      "R=1737.4 km), finest DEM per sample, 5 sub-rays per 1 deg bin (max), "
+                      f"terrain closer than {near_m:.0f} m excluded (treated as the site)",
             "generator": "precompute/horizon_mask.py",
             "generatedUtc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         }

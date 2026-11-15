@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SELENIX: Plan lunar missions with greater clarity</title>
+<meta name="description" content="SELENIX is a lunar mission-planning and analysis platform. Evaluate south-pole sites, see Sun and Earth visibility across the mission timeline, compare scenarios and trace every result to its evidence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root { --bg:#090b0e; --surface:#11141a; --surface-2:#181c24; --border:#2a303c; --text:#e9ebef; --text-2:#b3b9c4; --muted:#7f8795; --gold:#d2b36a; --blue:#5aa8ff; --blue-strong:#2f7fe0;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.6 var(--sans); -webkit-font-smoothing:antialiased; }
+a { color:var(--blue); }
+img { max-width:100%; display:block; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 24px; }
+header.nav { position:sticky; top:0; z-index:10; background:color-mix(in srgb,var(--bg) 88%,transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+.nav .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; height:60px; }
+.brand { display:flex; align-items:center; gap:11px; color:var(--text); text-decoration:none; font-weight:700; letter-spacing:.32em; font-size:16px; }
+.brand svg { color:var(--gold); }
+.nav nav { display:flex; gap:22px; align-items:center; }
+.nav nav a { color:var(--text-2); text-decoration:none; font-size:14px; }
+.nav nav a:hover { color:var(--text); }
+.btn { display:inline-block; padding:10px 18px; border-radius:9px; font-weight:600; font-size:15px; text-decoration:none; border:1px solid var(--border); color:var(--text); background:var(--surface-2); }
+.btn.primary { background:var(--blue-strong); border-color:var(--blue-strong); color:#fff; }
+.btn:hover { border-color:var(--blue); }
+@media (max-width:760px) { .nav nav a:not(.btn) { display:none; } }
+
+.hero { position:relative; overflow:hidden; border-bottom:1px solid var(--border); }
+.hero .bg { position:absolute; inset:0; background:url('assets/hero.jpg') 70% center/cover no-repeat; opacity:.95; }
+.hero .bg::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,var(--bg) 0%,rgba(9,11,14,.9) 34%,rgba(9,11,14,.15) 78%),linear-gradient(0deg,var(--bg) 0%,transparent 28%); }
+.hero .wrap { position:relative; padding-top:96px; padding-bottom:88px; }
+.eyebrow { font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+h1 { font-size:clamp(34px,5.2vw,58px); line-height:1.08; letter-spacing:-.02em; margin:14px 0 18px; max-width:760px; font-weight:600; }
+.lede { font-size:19px; color:var(--text-2); max-width:640px; margin:0 0 28px; }
+.cta { display:flex; gap:12px; flex-wrap:wrap; }
+.credit { position:relative; font-size:11.5px; color:var(--muted); margin-top:44px; max-width:560px; }
+
+section { padding:76px 0; border-bottom:1px solid var(--border); }
+h2 { font-size:clamp(26px,3.2vw,36px); line-height:1.15; letter-spacing:-.015em; margin:10px 0 14px; font-weight:600; max-width:820px; }
+.sub { color:var(--text-2); max-width:720px; margin:0 0 34px; font-size:17px; }
+.grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; }
+.card h3 { font-size:17px; margin:0 0 8px; font-weight:600; }
+.card p { margin:0; color:var(--text-2); font-size:15px; }
+.card .k { font-family:var(--mono); font-size:12px; color:var(--gold); display:block; margin-bottom:10px; }
+.split { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:44px; align-items:center; }
+.split.rev > :first-child { order:2; }
+@media (max-width:900px) { .split { grid-template-columns:1fr; gap:24px; } .split.rev > :first-child { order:0; } }
+.shot { border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5); background:#000; }
+ul.points { list-style:none; padding:0; margin:18px 0 0; display:grid; gap:10px; }
+ul.points li { padding-left:22px; position:relative; color:var(--text-2); }
+ul.points li::before { content:''; position:absolute; left:0; top:.62em; width:10px; height:2px; background:var(--gold); }
+table { width:100%; border-collapse:collapse; font-size:15px; }
+th, td { text-align:left; padding:13px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+td:first-child { font-weight:600; white-space:nowrap; }
+td { color:var(--text-2); } td:first-child { color:var(--text); }
+.tablewrap { overflow-x:auto; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; margin-bottom:28px; }
+.stat { border:1px solid var(--border); border-radius:14px; padding:20px; background:var(--surface); }
+.stat .v { font-size:34px; font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.stat .l { color:var(--text-2); font-size:14px; margin-top:4px; }
+.notclaim { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px 28px; color:var(--text-2); font-size:15px; }
+.notclaim div::before { content:'—'; color:var(--gold); margin-right:8px; }
+.final { text-align:center; border-bottom:none; }
+.final h2, .final .sub { margin-left:auto; margin-right:auto; }
+footer { padding:28px 0 44px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap">
+  <a class="brand" href="#top"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 5a15 15 0 0 0 0 30a9.5 15 0 0 1 0-30z" fill="currentColor"/><circle cx="31.5" cy="8.5" r="2.4" fill="#5aa8ff"/></svg>SELENIX</a>
+  <nav><a href="#capabilities">Capabilities</a><a href="#comparison">Scenario comparison</a><a href="#methodology">Methodology</a><a class="btn primary" href="app/">Open the platform</a></nav>
+</div></header>
+
+<main id="top">
+<div class="hero"><div class="bg" role="img" aria-label="Average solar illumination near the lunar south pole"></div><div class="wrap">
+  <span class="eyebrow">Lunar mission planning and analysis</span>
+  <h1>Plan lunar missions with greater clarity.</h1>
+  <p class="lede">SELENIX brings lunar site analysis, illumination and Earth-visibility modelling, terrain assessment and mission-timeline evaluation into one engineering-focused planning environment.</p>
+  <div class="cta"><a class="btn primary" href="app/">Explore SELENIX</a><a class="btn" href="#methodology">See how results are validated</a></div>
+  <p class="credit">Background: average solar illumination at the lunar south pole over 18.6 years, from LRO LOLA topography (NASA GSFC PGDA; Mazarico et al. 2011). Bright ridges are sunlit most of the time; black craters never are.</p>
+</div></div>
+
+<section id="platform"><div class="wrap">
+  <span class="eyebrow">The platform</span>
+  <h2>The data exists. Turning it into a planning answer is the hard part.</h2>
+  <p class="sub">Near the lunar south pole the Sun grazes the horizon and Earth sits low. A ridge a few kilometres away can hide either one for days, and a launch slip of three weeks moves both. Planners assemble this today from separate tools for ephemerides, terrain and engineering estimates. SELENIX connects those steps in one workflow.</p>
+  <div class="grid3">
+    <div class="card"><span class="k">01 · geometry</span><h3>Where the Sun and Earth are</h3><p>Apparent Sun and Earth directions from NASA NAIF SPICE kernels (DE440, lunar orientation included), for any supported site and mission window.</p></div>
+    <div class="card"><span class="k">02 · terrain</span><h3>Whether terrain blocks them</h3><p>Horizon profiles derived from LRO LOLA elevation models decide, sample by sample, whether each body is visible, obstructed or too close to call.</p></div>
+    <div class="card"><span class="k">03 · meaning</span><h3>What that does to the mission</h3><p>Visibility windows, longest interruptions and labelled power estimates are checked against the planner's own requirements and logged in plain language.</p></div>
+  </div>
+</div></section>
+
+<section id="capabilities"><div class="wrap">
+  <span class="eyebrow">Mission analysis capabilities</span>
+  <h2>Built around the questions a planner asks.</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Capability</th><th>Mission-planning value</th></tr></thead>
+    <tbody>
+      <tr><td>Site evaluation</td><td>Assess candidate south-pole sites with cited coordinates, LOLA elevation and published long-term illumination for context.</td></tr>
+      <tr><td>Sun visibility</td><td>See when the Sun is visible, obstructed or grazing the terrain, how long the longest obstruction lasts and when it starts.</td></tr>
+      <tr><td>Earth visibility</td><td>See direct-to-Earth geometric windows above a minimum antenna elevation, and the longest gap without Earth in view.</td></tr>
+      <tr><td>Mission timeline</td><td>Align scenarios on mission-elapsed time and step through any instant to see the sky against the terrain horizon.</td></tr>
+      <tr><td>Scenario comparison</td><td>Change a landing date or a site and read what changed, in three lines, with the same data and settings for every scenario.</td></tr>
+      <tr><td>Requirement checks</td><td>Test each scenario against stated thresholds: meets, needs review, does not meet or unknown, with the reason attached.</td></tr>
+      <tr><td>Power assumptions</td><td>Examine panel, load and battery assumptions through a transparent estimate that is always labelled as an estimate.</td></tr>
+      <tr><td>Date sweep</td><td>Scan sites against landing dates to find windows worth a closer look.</td></tr>
+      <tr><td>Evidence and traceability</td><td>Open any number to see its inputs, kernels, terrain product, method, tolerance, limitations and validation status.</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="sites"><div class="wrap split">
+  <div><span class="eyebrow">Site evaluation</span>
+    <h2>Start from a site you can cite.</h2>
+    <p class="sub" style="margin-bottom:0">Every curated site carries its source: the IM-2 Athena position from LROC, or the most illuminated points in NASA's published LOLA illumination maps. Terrain horizons are precomputed from LOLA elevation models and load with the site.</p>
+    <ul class="points"><li>Planetocentric coordinates in the lunar mean-Earth frame, one convention throughout.</li><li>Published 18.6-year illumination and Earth-visibility maps as context layers.</li><li>A site without terrain data is flagged, and its results are reported as upper bounds.</li></ul></div>
+  <div class="shot"><img src="assets/shot-briefing.jpg" alt="SELENIX mission briefing with a map of average solar illumination at the lunar south pole" loading="lazy"></div>
+</div></section>
+
+<section id="timeline"><div class="wrap split rev">
+  <div class="shot"><img src="assets/shot-timeline.jpg" alt="SELENIX mission timeline showing Sun and Earth visibility for three scenarios and estimated battery charge" loading="lazy"></div>
+  <div><span class="eyebrow">Illumination and timelines</span>
+    <h2>See the mission hour by hour.</h2>
+    <p class="sub" style="margin-bottom:0">Sun and Earth tracks for each scenario sit on one mission-elapsed-time axis. Drag the cursor and the horizon view shows both bodies against the terrain at that instant.</p>
+    <ul class="points"><li>Three states, not two: visible, obstructed and uncertain when a body is within a stated tolerance of the terrain.</li><li>Worst cases carry their timing: how long, and from when.</li><li>Battery charge appears only as a labelled estimate on explicit assumptions.</li></ul></div>
+</div></section>
+
+<section id="comparison"><div class="wrap split">
+  <div><span class="eyebrow">Scenario comparison</span>
+    <h2>The launch slips three weeks. What changes?</h2>
+    <p class="sub" style="margin-bottom:0">Duplicate a scenario, shift the date or move the site, and compare. SELENIX reports what changed, what it did to visibility and which requirement verdicts moved. It states the trade-off and leaves the decision to the team.</p>
+    <ul class="points"><li>Identical kernels, terrain method, tolerance and assumptions for every scenario.</li><li>“Needs review” says why: terrain missing, close to threshold, grazing samples or default assumptions.</li><li>No ranking and no winner: a better number on one metric is not a better mission.</li></ul></div>
+  <div class="shot"><img src="assets/shot-compare.jpg" alt="SELENIX comparing three scenarios with requirement verdicts and a mission timeline" loading="lazy"></div>
+</div></section>
+
+<section id="methodology"><div class="wrap">
+  <span class="eyebrow">Methodology and evidence</span>
+  <h2>Every number shows where it came from.</h2>
+  <p class="sub">SELENIX integrates established NASA data and methods; it does not replace them. Validation results are part of the product and are displayed in the workspace, including anything that fails.</p>
+  <div class="stats">
+    <div class="stat"><div class="v">{{CHECKS_PASSED}} of {{CHECKS_TOTAL}}</div><div class="l">validation checks passing in this build ({{BUILT}})</div></div>
+    <div class="stat"><div class="v">{{HORIZONS_WORST}}°</div><div class="l">worst difference from JPL Horizons across {{HORIZONS_N}} Sun and Earth angle comparisons</div></div>
+    <div class="stat"><div class="v">{{BENCH_SUN}} pt</div><div class="l">median difference from NASA's published LOLA illumination map over {{BENCH_N}} points (Earth visibility: {{BENCH_EARTH}} pt)</div></div>
+  </div>
+  <div class="split">
+    <div><ul class="points" style="margin-top:0">
+      <li><b style="color:var(--text)">Geometry:</b> NAIF SPICE, DE440 ephemeris and lunar orientation, MOON_ME frame, apparent positions, UTC time base.</li>
+      <li><b style="color:var(--text)">Terrain:</b> LRO LOLA polar elevation models at 40, 80 and 120 m; horizon profiles out to 200 km.</li>
+      <li><b style="color:var(--text)">Classification:</b> a documented tolerance separates visible, uncertain and obstructed. Missing terrain is never treated as a clear horizon.</li>
+      <li><b style="color:var(--text)">Quality classes:</b> measured, computed-geometry, engineering-estimate, user-assumption, demo-only, shown on every value.</li>
+      <li><b style="color:var(--text)">Reproducibility:</b> each result keeps its inputs, data versions, settings and a scenario hash.</li>
+    </ul></div>
+    <div class="shot"><img src="assets/shot-evidence.jpg" alt="SELENIX evidence drawer showing the rationale for a requirement verdict" loading="lazy"></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <span class="eyebrow">Platform demonstration</span>
+  <h2>A five-step planning example, with real calculated values.</h2>
+  <p class="sub">The guided demonstration walks through a south-pole lander whose launch slips 21 days: briefing, baseline, slip, alternative site, and the trade-off.</p>
+  <div class="grid3">
+    <div class="card" style="padding:0;overflow:hidden"><img src="assets/shot-decide.jpg" alt="SELENIX trade-off table for three options" loading="lazy"><div style="padding:16px 20px"><h3>The trade-off, stated</h3><p>What each option gains, what it costs and the open engineering question.</p></div></div>
+    <div class="card" style="padding:0;overflow:hidden"><img src="assets/shot-horizon.jpg" alt="SELENIX horizon view with terrain silhouette, Sun and Earth" loading="lazy"><div style="padding:16px 20px"><h3>The sky against the terrain</h3><p>Sun and Earth paths over the mission, with the terrain horizon from LOLA.</p></div></div>
+    <div class="card" style="padding:0;overflow:hidden"><img src="assets/shot-sweep.jpg" alt="SELENIX date sweep of sites against landing dates" loading="lazy"><div style="padding:16px 20px"><h3>Sites against dates</h3><p>A precomputed sweep shows where and when conditions hold.</p></div></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <span class="eyebrow">Scope</span>
+  <h2>What SELENIX does not claim.</h2>
+  <div class="notclaim">
+    <div>Earth visibility is geometric line of sight, not a communications link budget.</div>
+    <div>Sun visibility is not delivered electrical power.</div>
+    <div>It does not certify landing safety, thermal survival or mission feasibility.</div>
+    <div>It does not rank scenarios or make the decision. It supports human engineering judgement.</div>
+    <div>It is a prototype built for NASA Space Apps 2026, not a flight tool.</div>
+    <div>It does not replace validated mission-analysis tools; it connects their inputs.</div>
+  </div>
+</div></section>
+
+<section class="final"><div class="wrap">
+  <span class="eyebrow">Navigate lunar data. Plan with clarity.</span>
+  <h2>See how a three-week slip changes a south-pole mission.</h2>
+  <p class="sub">The platform runs in the browser. Nothing to install.</p>
+  <div class="cta" style="justify-content:center"><a class="btn primary" href="app/">Explore SELENIX</a><a class="btn" href="https://github.com/aishajawad2023-sys/Selenix-Lunar-Landing-Site-Navigator">View the source and methodology</a></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>SELENIX · NASA Space Apps 2026 prototype</span>
+  <span>Data: NASA NAIF SPICE, LRO LOLA (PDS), NASA GSFC PGDA, JPL Horizons. Resources: LROC QuickMap, NASA Moon Trek, CSA Moon exploration.</span>
+</div></footer>
+</body>
+</html>

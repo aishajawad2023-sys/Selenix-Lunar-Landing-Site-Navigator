@@ -1,14 +1,16 @@
 {
-  "note": "Mission Implications rules. Wording is data: edit templates here without touching the engine. Condition grammar: {metric, op, value|ref} | {all:[...]} | {any:[...]} | {flag}. Template fields {name|format}; formats: h, pct, pct0, wh, w, deg, x1, m, met, int.",
+  "note": "Mission-log rules. Wording is data: edit here without touching the engine. 'log' is the one-line entry, 'template' the detail shown on expand. Rules with shared=true are shown once for all scenarios with a per-scenario chip. Condition grammar: {metric, op, value|ref} | {all:[...]} | {any:[...]} | {flag}. Template fields {name|format}; formats: h, met, pct, pct0, wh, w, deg, x1, m, int.",
   "rules": [
     {
       "id": "R5",
-      "title": "Fidelity",
+      "title": "Terrain unavailable",
       "severity": "warning",
+      "banner": true,
       "condition": {
         "flag": "noTerrain"
       },
-      "template": "Terrain is not modelled for this site. Sun and Earth visibility come from geometry only, so they are optimistic: real terrain can only hide them more often.",
+      "log": "Treat every visibility figure here as an upper bound: terrain data is unavailable for this site.",
+      "template": "No terrain horizon is loaded for this site, so no sample can be classified visible. The figures shown assume no obstruction. Real terrain can only hide the Sun and Earth more often.",
       "vars": {},
       "inputs": [
         "site.hasTerrainMask"
@@ -24,25 +26,27 @@
         "op": "==",
         "value": 0
       },
-      "template": "At T+0 the Sun is hidden by terrain or the horizon: the lander arrives in darkness. First sunrise is at {rise|met}.",
+      "log": "Land in darkness: the Sun stays hidden until {rise|met}.",
+      "template": "At T+0 the Sun is not classified visible above the terrain horizon. The first sunrise in the mission comes at {rise|met}.",
       "vars": {
         "rise": "metric:timeToSunriseH"
       },
       "inputs": [
-        "sunVisible series"
+        "Sun state series"
       ],
       "qualityClass": "computed-geometry"
     },
     {
       "id": "R4",
-      "title": "Brownout",
+      "title": "Battery floor",
       "severity": "critical",
       "condition": {
         "metric": "brownoutMetH",
         "op": "!=",
         "value": null
       },
-      "template": "With a {load|w} load and a {bat|wh} battery ({dod|pct0} usable), the battery reaches its depth-of-discharge floor at {t|met}.",
+      "log": "Battery reaches its floor at {t|met} (est.): shed load or carry more storage.",
+      "template": "With a {load|w} load and a {bat|wh} battery ({dod|pct0} usable), the estimated charge reaches the depth-of-discharge floor at {t|met}. Engineering estimate on default or user-entered hardware values.",
       "vars": {
         "t": "metric:brownoutMetH",
         "load": "hw:loadW",
@@ -51,9 +55,58 @@
       },
       "inputs": [
         "power series",
-        "hardware"
+        "hardware assumptions"
       ],
       "qualityClass": "engineering-estimate"
+    },
+    {
+      "id": "R8",
+      "title": "No direct-to-Earth geometry",
+      "severity": "critical",
+      "condition": {
+        "metric": "earthVisiblePct",
+        "op": "==",
+        "value": 0
+      },
+      "log": "No direct-to-Earth geometry in this window: Earth never clears {minEl|deg}. Plan on a relay.",
+      "template": "Earth is never classified visible above max(terrain horizon, {minEl|deg} minimum antenna elevation) during this mission. Geometric result only: this is not a link budget.",
+      "vars": {
+        "minEl": "hw:minEarthElevDeg"
+      },
+      "inputs": [
+        "Earth state series"
+      ],
+      "qualityClass": "computed-geometry"
+    },
+    {
+      "id": "R2",
+      "title": "Communications gap",
+      "severity": "warning",
+      "condition": {
+        "all": [
+          {
+            "metric": "longestNoEarthGapH",
+            "op": ">",
+            "ref": "req:REQ-COMMS-GAP"
+          },
+          {
+            "metric": "earthVisiblePct",
+            "op": ">",
+            "value": 0
+          }
+        ]
+      },
+      "log": "Buffer data and run autonomously for up to {gap|h} without Earth in view.",
+      "template": "The longest interval without Earth classified visible is {gap|h}, starting at {start|met}. That exceeds the stated limit.",
+      "vars": {
+        "gap": "metric:longestNoEarthGapH",
+        "start": "metric:longestNoEarthGapStartH"
+      },
+      "inputs": [
+        "Earth state series",
+        "REQ-COMMS-GAP"
+      ],
+      "qualityClass": "computed-geometry"
     },
     {
       "id": "R1",
@@ -64,66 +117,85 @@
         "op": ">",
         "value": 0
       },
-      "template": "The longest dark period is {gap|h}. At {load|w} this needs about {wh|wh} of usable storage ({bat|wh} installed).",
+      "log": "Size storage for {gap|h} without Sun: about {wh|wh} usable at {load|w} (est.).",
+      "template": "The longest Sun obstruction is {gap|h}, starting at {start|met}. At {load|w} that needs about {wh|wh} of usable storage; {bat|wh} is installed. Rule-of-thumb estimate.",
       "vars": {
         "gap": "metric:longestDarkGapH",
+        "start": "metric:longestDarkGapStartH",
         "load": "hw:loadW",
         "wh": "metric:requiredStorageWh",
         "bat": "hw:batteryWh"
       },
       "inputs": [
-        "sunVisible series",
-        "hardware"
+        "Sun state series",
+        "hardware assumptions"
       ],
       "qualityClass": "engineering-estimate"
     },
     {
-      "id": "R2",
-      "title": "Comms gap",
+      "id": "R11",
+      "title": "Grazing geometry",
       "severity": "warning",
       "condition": {
-        "metric": "longestNoEarthGapH",
-        "op": ">",
-        "ref": "req:REQ-COMMS-GAP"
+        "any": [
+          {
+            "metric": "sunUncertainPct",
+            "op": ">",
+            "value": 3
+          },
+          {
+            "metric": "earthUncertainPct",
+            "op": ">",
+            "value": 3
+          }
+        ]
       },
-      "template": "Earth contact is lost for up to {gap|h}. Plan onboard data buffering and autonomy for that duration.",
+      "log": "Treat grazing hours as unconfirmed: Sun {su|pct}, Earth {eu|pct} of the mission sit within {tol|deg2} of the limit.",
+      "template": "A sample is 'uncertain' when the body centre is within {tol|deg2} of the terrain horizon (or of the antenna elevation limit). Uncertain samples are not counted as visible. Sun: {su|pct} of samples. Earth: {eu|pct}.",
       "vars": {
-        "gap": "metric:longestNoEarthGapH"
+        "su": "metric:sunUncertainPct",
+        "eu": "metric:earthUncertainPct",
+        "tol": "cfg:toleranceDeg"
       },
       "inputs": [
-        "earthVisible series",
-        "REQ-COMMS-GAP"
+        "state series",
+        "tolerance"
       ],
       "qualityClass": "computed-geometry"
     },
     {
-      "id": "R8",
-      "title": "No direct-to-Earth",
-      "severity": "critical",
+      "id": "R10",
+      "title": "First sunset",
+      "severity": "info",
       "condition": {
-        "metric": "earthVisiblePct",
-        "op": "==",
-        "value": 0
+        "metric": "timeToSunsetH",
+        "op": "!=",
+        "value": null
       },
-      "template": "Earth never rises above {minEl|deg} (terrain plus minimum antenna elevation) during this mission. Direct-to-Earth contact is not possible; a relay would be required.",
+      "log": "Fit critical first-day work before the first sunset at {t|met}.",
+      "template": "The Sun is visible at landing and first leaves the visible state at {t|met}.",
       "vars": {
-        "minEl": "hw:minEarthElevDeg"
+        "t": "metric:timeToSunsetH"
       },
       "inputs": [
-        "earthVisible series"
+        "Sun state series"
       ],
       "qualityClass": "computed-geometry"
     },
     {
       "id": "R3",
-      "title": "Panel choice",
+      "title": "Panel orientation",
       "severity": "info",
+      "shared": true,
       "condition": {
         "metric": "verticalToHorizontalRatio",
         "op": ">",
         "value": 2
       },
-      "template": "A vertical sun-tracking array yields about {x|x1}× the energy of a horizontal one at this site and date. The Sun averages only {el|deg} above the horizon.",
+      "log": "Mount the array vertically: about {x|x1} the energy of a flat one (est.).",
+      "sharedLog": "Mount the array vertically: it yields several times the energy of a flat one (est.).",
+      "chip": "{x|x1}",
+      "template": "The Sun averages only {el|deg} above the horizon while visible, so a flat panel catches it at a grazing angle. A vertical Sun-tracking array yields about {x|x1} the energy of a horizontal one of the same area.",
       "vars": {
         "x": "metric:verticalToHorizontalRatio",
         "el": "metric:meanSunElDeg"
@@ -137,6 +209,7 @@
       "id": "R7",
       "title": "Long shadows",
       "severity": "info",
+      "shared": true,
       "condition": {
         "all": [
           {
@@ -151,48 +224,33 @@
           }
         ]
       },
-      "template": "With the Sun at {el|deg} on average, a 1 m rock casts a shadow about {len|m} long. Expect long hazard shadows for landing and traverse imaging.",
+      "log": "Expect long shadows: a 1 m rock casts about {len|m}.",
+      "sharedLog": "Expect long shadows: small terrain features matter more than usual for landing and imaging.",
+      "chip": "1 m rock: {len|m}",
+      "template": "With the Sun at {el|deg} on average while visible, a 1 m rock on flat ground casts a shadow about {len|m} long.",
       "vars": {
         "el": "metric:meanSunElDeg",
         "len": "metric:shadowLengthM"
       },
       "inputs": [
-        "sunEl series"
-      ],
-      "qualityClass": "computed-geometry"
-    },
-    {
-      "id": "R10",
-      "title": "Time to sunset",
-      "severity": "info",
-      "condition": {
-        "metric": "timeToSunsetH",
-        "op": "!=",
-        "value": null
-      },
-      "template": "The first sunset after landing comes at {t|met}. Critical first-day activities should fit before it.",
-      "vars": {
-        "t": "metric:timeToSunsetH"
-      },
-      "inputs": [
-        "sunVisible series"
+        "Sun elevation series"
       ],
       "qualityClass": "computed-geometry"
     },
     {
       "id": "R6",
-      "title": "Slip delta",
+      "title": "Scenario difference",
       "severity": "info",
       "condition": {
         "comparison": true
       },
-      "template": "Moving from {A} to {B} changes sunlit time by {d|pp}; the largest change is in {metric}.",
+      "template": "{A} to {B}",
       "vars": {},
       "inputs": [
         "two scenarios"
       ],
       "qualityClass": "computed-geometry",
-      "handledIn": "app.js (comparison rule)"
+      "handledIn": "app.js (three-bullet difference)"
     }
   ]
 }

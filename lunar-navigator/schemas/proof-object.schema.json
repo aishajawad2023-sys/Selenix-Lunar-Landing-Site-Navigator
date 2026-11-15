@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "selenix/proof-object.schema.json",
+  "title": "Requirement proof object",
+  "description": "Emitted by Engine.checkRequirement: the verdict for one requirement in one scenario, with every check that led to it.",
+  "type": "object",
+  "required": ["id", "requirementId", "statement", "metric", "op", "threshold", "verdict", "observed", "bounds", "steps", "reasons", "evidence", "driver", "scenarioHash", "method", "createdUtc"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^proof:[0-9a-f]{8}:.+$" },
+    "requirementId": { "type": "string" },
+    "label": { "type": "string" },
+    "short": { "type": "string" },
+    "statement": { "type": "string", "description": "The requirement as stated, e.g. 'sunlitPct >= 70 %'." },
+    "metric": { "type": "string" },
+    "op": { "enum": [">=", "<=", ">", "<"] },
+    "threshold": { "type": ["number", "null"] },
+    "unit": { "type": "string" },
+    "marginPct": { "type": "number" },
+    "verdict": { "enum": ["meets", "needs review", "does not meet", "unknown"] },
+    "subState": { "type": ["string", "null"], "description": "Why a verdict is in review: terrain, close to threshold, both, grazing samples, default assumptions, or a combination." },
+    "reasons": { "type": "array", "items": { "enum": ["terrain", "close", "grazing", "defaults"] } },
+    "pass": { "type": ["boolean", "null"], "description": "Plain threshold test on the displayed value." },
+    "observed": { "type": "object", "required": ["indicatorId", "value"], "properties": { "indicatorId": { "type": "string" }, "value": { "type": ["number", "null"] }, "at": { "type": ["object", "null"], "properties": { "metH": { "type": "number" }, "relation": { "enum": ["at", "from"] } } } } },
+    "bounds": { "type": "object", "properties": { "conservative": { "type": ["number", "null"] }, "optimistic": { "type": ["number", "null"] } } },
+    "steps": { "type": "array", "items": { "type": "object", "required": ["check", "result", "detail"], "properties": { "check": { "enum": ["inputs-present", "threshold", "terrain-data", "uncertain-samples", "margin", "assumptions-confirmed"] }, "result": { "type": "boolean" }, "detail": { "type": "string" } } } },
+    "evidence": { "type": "array", "items": { "type": "string" }, "description": "Indicator record ids." },
+    "driver": { "type": "string" },
+    "scenarioHash": { "type": "string" },
+    "method": { "type": "string" },
+    "createdUtc": { "type": "string", "format": "date-time" }
+  }
+}

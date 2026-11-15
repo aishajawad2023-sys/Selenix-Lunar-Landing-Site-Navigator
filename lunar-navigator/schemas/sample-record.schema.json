@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "selenix/sample-record.schema.json",
+  "title": "Sample result record",
+  "description": "Minimum result record per timestamp and body (V1 specification 8.3). Produced by Engine.sampleRecord.",
+  "type": "object",
+  "required": ["scenario_id", "timestamp", "mission_elapsed_time_h", "body", "azimuth_deg", "elevation_deg", "terrain_horizon_elevation_deg", "visibility_state", "quality_state", "method"],
+  "properties": {
+    "scenario_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "mission_elapsed_time_h": { "type": "number" },
+    "body": { "enum": ["sun", "earth"] },
+    "azimuth_deg": { "type": "number" },
+    "elevation_deg": { "type": "number" },
+    "terrain_horizon_elevation_deg": { "type": ["number", "null"], "description": "null when terrain is unavailable; never 0 by default." },
+    "visibility_state": { "enum": ["visible", "uncertain", "obstructed"] },
+    "quality_state": { "enum": ["supported", "limited", "uncertain", "unavailable"] },
+    "tolerance_deg": { "type": "number" },
+    "method": { "type": "string" },
+    "geometry": { "type": "string" },
+    "terrain": { "type": ["string", "null"] }
+  }
+}
