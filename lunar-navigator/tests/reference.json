@@ -852,7 +852,7 @@
     "sunUncertainPct": 0.0,
     "earthUncertainPct": 0.0,
     "longestDarkGapH": 0.0,
-    "longestNoEarthGapH": 240.16666666666666
+    "longestNoEarthGapH": 240.0
    },
    "optimistic": {
     "sunlitPct": 100.0,
@@ -860,7 +860,7 @@
     "sunUncertainPct": 0.0,
     "earthUncertainPct": 0.0,
     "longestDarkGapH": 0.0,
-    "longestNoEarthGapH": 240.16666666666666
+    "longestNoEarthGapH": 240.0
    }
   },
   "samples": [
@@ -1270,8 +1270,8 @@
     "earthVisiblePct": 0.0,
     "sunUncertainPct": 100.0,
     "earthUncertainPct": 100.0,
-    "longestDarkGapH": 120.16666666666667,
-    "longestNoEarthGapH": 120.16666666666667
+    "longestDarkGapH": 120.0,
+    "longestNoEarthGapH": 120.0
    },
    "optimistic": {
     "sunlitPct": 100.0,

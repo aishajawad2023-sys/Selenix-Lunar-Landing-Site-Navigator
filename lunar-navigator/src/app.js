@@ -6,6 +6,9 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const STORE_KEY = 'selenix.v2', MAX_SCEN = 3, NAMES = ['A', 'B', 'C'], CV = ['--s1', '--s2', '--s3'];
   const CFG = D.config, F = E.format;
+  const STEPS = [5, 10, 30];
+  const cfgNow = () => ({ ...CFG, stepMin: state.stepMin || CFG.stepMin });
+  const stepH = () => (state.stepMin || CFG.stepMin) / 60;
 
   const geometry = E.SpiceTableAdapter(new Float32Array(Uint8Array.from(atob(D.ephemerisB64), c => c.charCodeAt(0)).buffer), D.ephemerisMeta);
   const COV = geometry.coverage();
@@ -38,10 +41,10 @@
   const store = E.createStore();
   function runScenario(sc) {
     const site = siteById(sc.siteId), mr = maskRec(sc.siteId);
-    const key = E.hash({ sc, la: site.lat, lo: site.lon, el: site.elevationM, m: mr ? (mr.uploaded || mr.generatedUtc) : null, hw: state.hw });
+    const key = E.hash({ sc, la: site.lat, lo: site.lon, el: site.elevationM, m: mr ? (mr.uploaded || mr.generatedUtc) : null, hw: state.hw, step: state.stepMin || CFG.stepMin });
     if (cache.has(key)) return cache.get(key);
     let out;
-    try { out = { run: E.simulate({ geometry, terrain: E.HorizonMaskAdapter(mr), site, scenario: sc, hw: state.hw, config: CFG }), error: null }; }
+    try { out = { run: E.simulate({ geometry, terrain: E.HorizonMaskAdapter(mr), site, scenario: sc, hw: state.hw, config: cfgNow() }), error: null }; }
     catch (err) { out = { run: null, error: err.message }; }
     if (cache.size > 400) cache.clear();
     cache.set(key, out);
@@ -63,7 +66,7 @@
     return R;
   }
   const ok = () => R.filter(r => r.run);
-  const ruleCtx = res => ({ hw: state.hw, requirements: state.requirements, config: CFG, flags: { noTerrain: res.run.geometryOnly } });
+  const ruleCtx = res => ({ hw: state.hw, requirements: state.requirements, config: cfgNow(), flags: { noTerrain: res.run.geometryOnly } });
   const firedRules = res => D.rules.rules.filter(r => !r.condition.comparison && !r.banner).map(r => E.evalRule(r, res.run.metrics, ruleCtx(res))).filter(x => x.fired);
 
   // ---------------------------------------------------------------- icons
@@ -286,10 +289,11 @@
     const maxH = Math.max(...o.map(x => x.sc.durationDays * 24));
     if (state.cursorH > maxH) state.cursorH = 0;
     tl = { maxH };
-    return `<section class="card"><h2>Mission timeline <small>aligned on mission-elapsed time; ${CFG.stepMin}-min samples; drag the cursor</small></h2>
+    return `<section class="card"><h2>Mission timeline <small>aligned on mission-elapsed time; drag the cursor</small></h2>
+      <div class="tabs" style="margin:-4px 0 8px"><span class="small muted">Sampling interval</span>${STEPS.map(m => `<button class="btn sm" data-step="${m}" aria-pressed="${m === (state.stepMin || CFG.stepMin)}" title="${m}-minute samples for every scenario">${m} min</button>`).join('')}<span class="small muted">${(state.stepMin || CFG.stepMin) === CFG.stepMin ? 'default; matches the validated reference runs' : 'applies to every scenario; windows shorter than a sample can be missed'}</span></div>
       <div class="legend"><span><i class="lk" style="background:var(--sun)"></i>Sun visible</span><span><i class="lk" style="background:var(--earth)"></i>Earth visible</span><span><i class="lk hatch" style="color:var(--text-2)"></i>uncertain (within ${CFG.toleranceDeg}° of the limit)</span><span>empty = obstructed</span><span>lines: battery charge (est.)</span></div>
       <div class="chartbox"><canvas id="tl-canvas" aria-label="Sun and Earth visibility states and estimated battery charge per scenario over mission-elapsed time"></canvas></div>
-      <div class="cursor-row"><button class="btn sm" data-act="play" title="Animate the mission time">${playing ? '❚❚ Pause' : '▶ Play'}</button><input type="range" id="cursor" min="0" max="${maxH}" step="${1 / 6}" value="${state.cursorH}" aria-label="Mission time cursor"><span class="mono" id="cursor-lbl"></span>
+      <div class="cursor-row"><button class="btn sm" data-act="play" title="Animate the mission time">${playing ? '❚❚ Pause' : '▶ Play'}</button><input type="range" id="cursor" min="0" max="${maxH}" step="${stepH()}" value="${state.cursorH}" aria-label="Mission time cursor"><span class="mono" id="cursor-lbl"></span>
         <button class="more" data-act="readout">${state.readoutOpen ? 'Hide angles' : 'Show angles'}</button><button class="more" data-act="windows">${state.windowsOpen ? 'Hide windows' : 'Show windows'}</button></div>
       <div class="readout" id="readout"></div><div id="windows"></div></section>`;
   }
@@ -372,11 +376,11 @@
     const rows = o.map(res => res.run.windows[body].map(w => {
       const cur = state.cursorH >= w.startRefH && (state.cursorH < w.endRefH || w.endsWithMission);
       return `<tr class="${cur ? 'cur' : ''}"><td><span class="sw" style="--c:var(${CV[res.i]});margin-right:6px"></span>${res.name}</td><td>${key(w.state)} ${w.state}</td>
-        <td><button class="jump" data-jump="${Math.ceil(w.startRefH * 6) / 6}" title="Move the cursor here">T+${E.fmtHM(w.startRefH)}</button> <span class="muted small">${utcAt(res, w.startRefH)}</span></td>
+        <td><button class="jump" data-jump="${Math.ceil(w.startRefH / stepH() - 1e-9) * stepH()}" title="Move the cursor here">T+${E.fmtHM(w.startRefH)}</button> <span class="muted small">${utcAt(res, w.startRefH)}</span></td>
         <td>${w.endsWithMission ? 'mission end' : `T+${E.fmtHM(w.endRefH)} <span class="muted small">${utcAt(res, w.endRefH)}</span>`}</td>
         <td>${num({ kind: 'window', res, w, body }, E.fmtHM(w.durationRefH))}</td></tr>`; }).join('')).join('');
     el.innerHTML = `<div class="wins"><div class="tabs" style="margin:10px 0 6px"><button class="btn sm" data-wb="sun" aria-pressed="${body === 'sun'}">Sun windows</button><button class="btn sm" data-wb="earth" aria-pressed="${body === 'earth'}">Earth windows</button>
-      <span class="small muted">Times refined between samples to the minute. Summary metrics count ${CFG.stepMin}-min samples and treat uncertain as not visible. Click a start time to move the cursor.</span></div>
+      <span class="small muted">Times refined between samples to the minute. Summary metrics count ${state.stepMin || CFG.stepMin}-min samples and treat uncertain as not visible. Click a start time to move the cursor.</span></div>
       <div class="tablewrap wtab"><table><thead><tr><th>Scenario</th><th>State</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   }
 
@@ -440,7 +444,7 @@
   const liveCell = (id, d, dur) => { const o = runScenario({ siteId: id, startUtc: d, durationDays: dur }); if (!o.run) return null; const m = o.run.metrics; return { sun: m.sunlitPct, sunU: m.sunUncertainPct, earth: m.earthVisiblePct, earthU: m.earthUncertainPct, dark: m.longestDarkGapH, noEarth: m.longestNoEarthGapH }; };
   function sweepData() {
     const sw = D.sweep, dur = state.scenarios[0].durationDays;
-    const isStatic = dur === sw.durationDays && state.hw.minEarthElevDeg === sw.minEarthElevDeg && !Object.keys(state.uploadedMasks).length;
+    const isStatic = dur === sw.durationDays && (state.stepMin || CFG.stepMin) === sw.stepMin && state.hw.minEarthElevDeg === sw.minEarthElevDeg && !Object.keys(state.uploadedMasks).length;
     return { staticData: isStatic, dates: sw.dates, dur, get: (id, k) => isStatic && sw.sites[id] ? sw.sites[id][k] : liveCell(id, sw.dates[k], dur) };
   }
   function sweepHtml() {
@@ -460,7 +464,7 @@
     return `<section class="card"><h2>${metric === 'sun' ? 'Sunlit % by site and date' : 'Earth-visible % by site and date'} <small>${sd.dur}-day missions landing at 12:00 UTC; click a cell to load it into scenario C</small></h2>
       <div class="row" style="margin-bottom:10px;align-items:center"><div class="tabs"><button class="btn sm" data-hm="sun" aria-pressed="${metric === 'sun'}">Sunlit %</button><button class="btn sm" data-hm="earth" aria-pressed="${metric === 'earth'}">Earth-visible %</button></div>
         <span class="key"><span><i style="background:var(--sw-good)"></i>100%</span><span><i style="background:var(--sw-warn)"></i>60–99%</span><span><i class="hc r" style="height:12px;min-width:14px"></i>below 60% (hatched)</span><span><i style="background:var(--surface-3);outline:1px dashed var(--muted)"></i>faded = terrain unavailable (upper bound)</span></span>
-        <span class="small muted">${sd.staticData ? `Precomputed: static JSON built ${D.sweep.generatedUtc.slice(0, 10)} with the same engine.` : 'Inputs differ from the precomputed sweep, so this grid is recomputed live.'}</span></div>${grid}</section>`;
+        <span class="small muted">${sd.staticData ? `Precomputed: static JSON built ${D.sweep.generatedUtc.slice(0, 10)} with the same engine.` : `Duration, sampling interval, antenna elevation or terrain differ from the precomputed sweep (${D.sweep.durationDays} d, ${D.sweep.stepMin} min, ${D.sweep.minEarthElevDeg}°), so this grid is recomputed live.`}</span></div>${grid}</section>`;
   }
 
   // ---------------------------------------------------------------- map + sites
@@ -634,7 +638,7 @@
         <dt>Coverage window</dt><dd>Table ${esc(COV.startUtc.slice(0, 10))} to ${esc(COV.endUtc.slice(0, 10))} (${esc(g.sampling)}); kernels ${esc((kc.startUtc || '').slice(0, 10))} to ${esc((kc.endUtc || '').slice(0, 10))}</dd>
         <dt>Lunar frame</dt><dd>${esc(g.frame)}: ${esc(g.frameNote)}</dd><dt>Time system</dt><dd>${esc(g.timeSystem)}</dd><dt>Aberration correction</dt><dd>${esc(g.aberration)}: ${esc(g.aberrationNote)}</dd>
         <dt>Terrain</dt><dd>${m0 ? `${esc(m0.dem.version)}<br>Horizon masks: 1° azimuth steps, rays to ${m0.dem.extentKm} km, observer ${m0.observerHeightM} m, near field ${m0.nearFieldM} m. ${esc(m0.method)}` : 'none'}</dd>
-        <dt>Visibility tolerance</dt><dd>±${CFG.toleranceDeg}°. ${esc(CFG.toleranceRationale)}</dd><dt>Sampling</dt><dd>${CFG.stepMin}-minute samples; transitions are known to one step.</dd>
+        <dt>Visibility tolerance</dt><dd>±${CFG.toleranceDeg}°. ${esc(CFG.toleranceRationale)}</dd><dt>Sampling</dt><dd>${state.stepMin || CFG.stepMin}-minute samples (choice: ${STEPS.join(', ')} min; default ${CFG.stepMin}). Summary metrics count samples; window boundaries are refined between samples.</dd>
         <dt>Calculation version</dt><dd class="mono">${esc(E.CODE_VERSION)} · adapters ${esc(g.id)}@${esc(g.version)} (from ${esc(g.derivedFrom)}), lola-horizon@2.0.0</dd>
         <dt>Last updated</dt><dd>Ephemeris table ${esc(g.generatedUtc)} · sweep ${esc(D.sweep.generatedUtc.slice(0, 19))}Z · build ${esc(D.builtUtc)}</dd>
         <dt>All sources</dt><dd><ul>${D.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a> <span class="muted">${esc(s.version)}</span> <span class="qc">${esc(s.qualityClass)}</span></li>`).join('')}</ul></dd>
@@ -654,7 +658,7 @@
   // ---------------------------------------------------------------- export
   function exportJSON() {
     const o = ok();
-    const out = { generator: E.CODE_VERSION, exportedUtc: new Date().toISOString(), provenance: geometry.describe(), config: CFG, hardware: state.hw, marginPct: state.marginPct, requirements: state.requirements,
+    const out = { generator: E.CODE_VERSION, exportedUtc: new Date().toISOString(), provenance: geometry.describe(), config: cfgNow(), hardware: state.hw, marginPct: state.marginPct, requirements: state.requirements,
       scenarios: o.map(res => ({ name: res.name, scenarioHash: E.scenarioId(res.run), site: { id: res.site.id, name: res.site.name, lat: res.site.lat, lon: res.site.lon, elevationM: res.site.elevationM, coordStatus: res.site.coordStatus }, startUtc: res.sc.startUtc, durationDays: res.sc.durationDays,
         qualityState: res.run.qualityState, metrics: res.run.metrics, bounds: res.run.bounds, windows: res.run.windows, proofs: res.proofs, missionLog: firedRules(res).map(x => ({ id: x.id, text: x.text })) })),
       differences: o.slice(1).map((b, k) => { const c = comparison(o[k], b); return { from: o[k].name, to: b.name, siteChanged: c.siteChanged, landingShiftDays: c.shiftD, deltas: c.deltas.map(x => ({ metric: x.k, from: x.from, to: x.to })), verdictChanges: c.changes.map(x => ({ requirement: x.q.id, from: x.from.verdict, to: x.to.verdict })) }; }),
@@ -690,7 +694,7 @@
   // ---------------------------------------------------------------- events
   let maskSite = null;
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
+    const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],[data-step],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
     if (!t) { if (!e.target.closest('#drawer') && e.target.id !== 'tl-canvas') closeDrawer(); return; }
     if (t.dataset.ev) return openEvidence(EV[t.dataset.ev]);
     if (t.dataset.copyev) return copy(JSON.stringify(EV[t.dataset.copyev].obj, null, 2), 'Record copied');
@@ -723,6 +727,7 @@
       return renderAll();
     }
     if (t.dataset.jump !== undefined) { stopPlay(); state.cursorH = +t.dataset.jump; return renderLive(); }
+    if (t.dataset.step) { stopPlay(); state.stepMin = +t.dataset.step; state.cursorH = Math.round(state.cursorH / stepH()) * stepH(); renderAll(); return toast(`Sampling every ${state.stepMin} min for all scenarios`); }
     if (t.dataset.wb) { state.windowBody = t.dataset.wb; return renderWindows(); }
     if (t.dataset.hz !== undefined) { state.horizonIdx = +t.dataset.hz; return renderLive(); }
     if (t.dataset.hm) { state.heatMetric = t.dataset.hm; return renderAll(); }
@@ -790,7 +795,7 @@
     }
     hideTip();
   });
-  document.addEventListener('click', e => { if (e.target.id === 'tl-canvas' && tl && tl.geom) { stopPlay(); state.cursorH = Math.round(tlHour(e) * 6) / 6; renderLive(); save(); } });
+  document.addEventListener('click', e => { if (e.target.id === 'tl-canvas' && tl && tl.geom) { stopPlay(); state.cursorH = Math.round(tlHour(e) / stepH()) * stepH(); renderLive(); save(); } });
   let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => drawTimeline(), 120); });
 
   renderAll();

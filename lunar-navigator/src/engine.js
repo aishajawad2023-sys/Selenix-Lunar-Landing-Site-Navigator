@@ -151,10 +151,12 @@
     }
     const m = {};
     m.sunlitPct = 100 * sum(sunVis) / N; m.earthVisiblePct = 100 * sum(earthVis) / N;
-    m.sunVisibleH = sum(sunVis) * dtH; m.earthVisibleH = sum(earthVis) * dtH;
+    // Duration accounting: sample k covers [k, k+1) steps, truncated at the mission end (the last sample is the end instant).
+    m.sunVisibleH = (sum(sunVis) - sunVis[N - 1]) * dtH; m.earthVisibleH = (sum(earthVis) - earthVis[N - 1]) * dtH;
+    const span = r => Math.min(r.len, N - 1 - r.start) * dtH;
     const dg = longestRun(sunVis, 0), eg = longestRun(earthVis, 0);
-    m.longestDarkGapH = dg.len * dtH; m.longestDarkGapStartH = dg.len ? dg.start * dtH : null;
-    m.longestNoEarthGapH = eg.len * dtH; m.longestNoEarthGapStartH = eg.len ? eg.start * dtH : null;
+    m.longestDarkGapH = dg.len ? span(dg) : 0; m.longestDarkGapStartH = dg.len ? dg.start * dtH : null;
+    m.longestNoEarthGapH = eg.len ? span(eg) : 0; m.longestNoEarthGapStartH = eg.len ? eg.start * dtH : null;
     m.sunlitAtStart = sunVis[0]; m.earthVisibleAtStart = earthVis[0];
     m.timeToSunsetH = timeToTransition(sunVis, 0, 1, 0, dtH); m.timeToSunriseH = timeToTransition(sunVis, 0, 0, 1, dtH);
     m.timeToEarthsetH = timeToTransition(earthVis, 0, 1, 0, dtH); m.timeToEarthriseH = timeToTransition(earthVis, 0, 0, 1, dtH);
@@ -185,7 +187,7 @@
   function intervals(states, dtH) {
     const out = []; let st = 0;
     for (let i = 1; i <= states.length; i++) if (i === states.length || states[i] !== states[st]) {
-      out.push({ state: STATE_NAME[states[st]], startH: st * dtH, endH: Math.min(i, states.length - 1) * dtH, durationH: (i - st) * dtH, samples: i - st, startIdx: st, endIdx: i - 1 });
+      out.push({ state: STATE_NAME[states[st]], startH: st * dtH, endH: Math.min(i, states.length - 1) * dtH, durationH: Math.min(i - st, states.length - 1 - st) * dtH, samples: i - st, startIdx: st, endIdx: i - 1 });
       st = i;
     }
     return out;

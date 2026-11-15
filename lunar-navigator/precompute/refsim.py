@@ -97,10 +97,11 @@ def metrics(series, step_min=None, min_state="visible"):
     earth = [x["earthState"] in ok for x in series]
 
     def longest_false(a):
+        # sample k covers [k, k+1) steps, truncated at the mission end (same accounting as engine.js)
         best = cur = 0
-        for v in a:
+        for k, v in enumerate(a):
             cur = 0 if v else cur + 1
-            best = max(best, cur)
+            best = max(best, min(cur, len(a) - 1 - (k - cur + 1)))
         return best * step_min / 60
 
     return {
