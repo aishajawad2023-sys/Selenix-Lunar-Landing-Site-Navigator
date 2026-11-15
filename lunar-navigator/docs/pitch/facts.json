@@ -1,0 +1,1415 @@
+{
+ "scenarios": {
+  "A": {
+   "siteId": "mons-mouton",
+   "site": "Mons Mouton (IM-2 Athena site)",
+   "startUtc": "2027-08-11T12:00:00Z",
+   "metrics": {
+    "sunlitPct": 100,
+    "earthVisiblePct": 68.00832755031229,
+    "sunVisibleH": 240,
+    "earthVisibleH": 163.16666666666666,
+    "longestDarkGapH": 0,
+    "longestDarkGapStartH": null,
+    "longestNoEarthGapH": 76.83333333333333,
+    "longestNoEarthGapStartH": 0,
+    "sunlitAtStart": 1,
+    "earthVisibleAtStart": 0,
+    "timeToSunsetH": null,
+    "timeToSunriseH": null,
+    "timeToEarthsetH": null,
+    "timeToEarthriseH": 76.83333333333333,
+    "energyWh": 159338.14297008145,
+    "energyHorizontalWh": 12079.747257638506,
+    "energyVerticalTrackingWh": 159338.14297008145,
+    "verticalToHorizontalRatio": 13.190519600426704,
+    "loadEnergyWh": 36000,
+    "energyBalanceWh": 123338.14297008145,
+    "meanSunElDeg": 4.334330310127226,
+    "shadowLengthM": 13.19383589724908,
+    "minSocPct": 100,
+    "minSocAtH": 0,
+    "socMarginPct": 80,
+    "brownoutMetH": null,
+    "requiredStorageWh": 0,
+    "sunUncertainPct": 0,
+    "earthUncertainPct": 4.233171408743928,
+    "maxSunElDeg": 5.500842208797586,
+    "maxEarthElDeg": 10.105697604218175,
+    "durationH": 240
+   },
+   "proofs": [
+    {
+     "id": "REQ-SUN",
+     "label": "Sun-visible share",
+     "short": "Sun share",
+     "verdict": "meets",
+     "subState": null,
+     "value": 100,
+     "at": null,
+     "driver": "Sun visible is 100%; the requirement is >= 60%."
+    },
+    {
+     "id": "REQ-DARK",
+     "label": "Longest Sun obstruction",
+     "short": "Sun obstruction",
+     "verdict": "meets",
+     "subState": null,
+     "value": 0,
+     "at": null,
+     "driver": "Longest Sun obstruction is 0 h; the requirement is <= 3 d."
+    },
+    {
+     "id": "REQ-EARTH",
+     "label": "Earth-visible share",
+     "short": "Earth share",
+     "verdict": "meets",
+     "subState": null,
+     "value": 68.00832755031229,
+     "at": null,
+     "driver": "Earth visible is 68%; the requirement is >= 50%."
+    },
+    {
+     "id": "REQ-COMMS-GAP",
+     "label": "Longest gap without Earth",
+     "short": "Earth gap",
+     "verdict": "meets",
+     "subState": null,
+     "value": 76.83333333333333,
+     "at": {
+      "metH": 0,
+      "relation": "from"
+     },
+     "driver": "Longest Earth obstruction is 3 d 5 h from T+0 h; the requirement is <= 4 d."
+    },
+    {
+     "id": "REQ-POWER",
+     "label": "Battery margin above floor (est.)",
+     "short": "battery margin",
+     "verdict": "needs review",
+     "subState": "default assumptions",
+     "value": 80,
+     "at": {
+      "metH": 0,
+      "relation": "at"
+     },
+     "driver": "Battery margin above floor (estimate) is 80% at T+0 h; the requirement is >= 10%."
+    }
+   ],
+   "windows": {
+    "sun": [
+     {
+      "state": "visible",
+      "startH": 0,
+      "endH": 240,
+      "durH": 240
+     }
+    ],
+    "earth": [
+     {
+      "state": "obstructed",
+      "startH": 0,
+      "endH": 66.50958633422852,
+      "durH": 66.50958633422852
+     },
+     {
+      "state": "uncertain",
+      "startH": 66.50958633422852,
+      "endH": 76.76815668741862,
+      "durH": 10.258570353190109
+     },
+     {
+      "state": "visible",
+      "startH": 76.76815668741862,
+      "endH": 240,
+      "durH": 163.23184331258136
+     }
+    ]
+   },
+   "fmt": {
+    "sun": "100%",
+    "earth": "68%",
+    "dark": "0 h",
+    "noEarth": "3 d 5 h",
+    "rise": null,
+    "brown": null,
+    "vh": "13.2",
+    "shadow": "13",
+    "meanEl": "4.3"
+   }
+  },
+  "B": {
+   "siteId": "mons-mouton",
+   "site": "Mons Mouton (IM-2 Athena site)",
+   "startUtc": "2027-09-01T12:00:00Z",
+   "metrics": {
+    "sunlitPct": 43.44205412907703,
+    "earthVisiblePct": 6.384455239417071,
+    "sunVisibleH": 104.16666666666666,
+    "earthVisibleH": 15.166666666666666,
+    "longestDarkGapH": 135.83333333333331,
+    "longestDarkGapStartH": 0,
+    "longestNoEarthGapH": 224.83333333333331,
+    "longestNoEarthGapStartH": 0,
+    "sunlitAtStart": 0,
+    "earthVisibleAtStart": 0,
+    "timeToSunsetH": null,
+    "timeToSunriseH": 135.83333333333331,
+    "timeToEarthsetH": null,
+    "timeToEarthriseH": 224.83333333333331,
+    "energyWh": 70100.43653534919,
+    "energyHorizontalWh": 5244.643969097537,
+    "energyVerticalTrackingWh": 70100.43653534919,
+    "verticalToHorizontalRatio": 13.366100148722126,
+    "loadEnergyWh": 36000,
+    "energyBalanceWh": 34100.43653534919,
+    "meanSunElDeg": 4.281719936794729,
+    "shadowLengthM": 13.356567646978403,
+    "minSocPct": 20,
+    "minSocAtH": 26.666666666666664,
+    "socMarginPct": 3.552713678800501e-15,
+    "brownoutMetH": 26.833333333333332,
+    "requiredStorageWh": 25468.749999999993,
+    "sunUncertainPct": 1.8043025676613462,
+    "earthUncertainPct": 4.302567661346287,
+    "maxSunElDeg": 5.821489036022073,
+    "maxEarthElDeg": 3.0873945021617386,
+    "durationH": 240
+   },
+   "proofs": [
+    {
+     "id": "REQ-SUN",
+     "label": "Sun-visible share",
+     "short": "Sun share",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 43.44205412907703,
+     "at": null,
+     "driver": "Sun visible is 43%; the requirement is >= 60%."
+    },
+    {
+     "id": "REQ-DARK",
+     "label": "Longest Sun obstruction",
+     "short": "Sun obstruction",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 135.83333333333331,
+     "at": {
+      "metH": 0,
+      "relation": "from"
+     },
+     "driver": "Longest Sun obstruction is 5 d 16 h from T+0 h; the requirement is <= 3 d."
+    },
+    {
+     "id": "REQ-EARTH",
+     "label": "Earth-visible share",
+     "short": "Earth share",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 6.384455239417071,
+     "at": null,
+     "driver": "Earth visible is 6.4%; the requirement is >= 50%."
+    },
+    {
+     "id": "REQ-COMMS-GAP",
+     "label": "Longest gap without Earth",
+     "short": "Earth gap",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 224.83333333333331,
+     "at": {
+      "metH": 0,
+      "relation": "from"
+     },
+     "driver": "Longest Earth obstruction is 9 d 9 h from T+0 h; the requirement is <= 4 d."
+    },
+    {
+     "id": "REQ-POWER",
+     "label": "Battery margin above floor (est.)",
+     "short": "battery margin",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 3.552713678800501e-15,
+     "at": {
+      "metH": 26.666666666666664,
+      "relation": "at"
+     },
+     "driver": "Battery margin above floor (estimate) is 0% at T+27 h; the requirement is >= 10%."
+    }
+   ],
+   "windows": {
+    "sun": [
+     {
+      "state": "obstructed",
+      "startH": 0,
+      "endH": 131.40951665242514,
+      "durH": 131.40951665242514
+     },
+     {
+      "state": "uncertain",
+      "startH": 131.40951665242514,
+      "endH": 135.77658208211264,
+      "durH": 4.3670654296875
+     },
+     {
+      "state": "visible",
+      "startH": 135.77658208211264,
+      "endH": 240,
+      "durH": 104.22341791788736
+     }
+    ],
+    "earth": [
+     {
+      "state": "obstructed",
+      "startH": 0,
+      "endH": 214.36128870646158,
+      "durH": 214.36128870646158
+     },
+     {
+      "state": "uncertain",
+      "startH": 214.36128870646158,
+      "endH": 224.7568728129069,
+      "durH": 10.395584106445312
+     },
+     {
+      "state": "visible",
+      "startH": 224.7568728129069,
+      "endH": 240,
+      "durH": 15.243127187093108
+     }
+    ]
+   },
+   "fmt": {
+    "sun": "43%",
+    "earth": "6.4%",
+    "dark": "5 d 16 h",
+    "noEarth": "9 d 9 h",
+    "rise": "5 d 16 h",
+    "brown": "27 h",
+    "vh": "13.4",
+    "shadow": "13",
+    "meanEl": "4.3"
+   }
+  },
+  "C": {
+   "siteId": "connecting-ridge",
+   "site": "Connecting Ridge",
+   "startUtc": "2027-09-01T12:00:00Z",
+   "metrics": {
+    "sunlitPct": 100,
+    "earthVisiblePct": 0,
+    "sunVisibleH": 240,
+    "earthVisibleH": 0,
+    "longestDarkGapH": 0,
+    "longestDarkGapStartH": null,
+    "longestNoEarthGapH": 240,
+    "longestNoEarthGapStartH": 0,
+    "sunlitAtStart": 1,
+    "earthVisibleAtStart": 0,
+    "timeToSunsetH": null,
+    "timeToSunriseH": null,
+    "timeToEarthsetH": null,
+    "timeToEarthriseH": null,
+    "energyWh": 162168.61968321892,
+    "energyHorizontalWh": 2013.4067356297287,
+    "energyVerticalTrackingWh": 162168.61968321892,
+    "verticalToHorizontalRatio": 80.54439116222476,
+    "loadEnergyWh": 36000,
+    "energyBalanceWh": 126168.61968321892,
+    "meanSunElDeg": 0.7109248698457448,
+    "shadowLengthM": 80.5891614325988,
+    "minSocPct": 100,
+    "minSocAtH": 0,
+    "socMarginPct": 80,
+    "brownoutMetH": null,
+    "requiredStorageWh": 0,
+    "sunUncertainPct": 0,
+    "earthUncertainPct": 0,
+    "maxSunElDeg": 1.079232460493447,
+    "maxEarthElDeg": -1.9475243509366968,
+    "durationH": 240
+   },
+   "proofs": [
+    {
+     "id": "REQ-SUN",
+     "label": "Sun-visible share",
+     "short": "Sun share",
+     "verdict": "meets",
+     "subState": null,
+     "value": 100,
+     "at": null,
+     "driver": "Sun visible is 100%; the requirement is >= 60%."
+    },
+    {
+     "id": "REQ-DARK",
+     "label": "Longest Sun obstruction",
+     "short": "Sun obstruction",
+     "verdict": "meets",
+     "subState": null,
+     "value": 0,
+     "at": null,
+     "driver": "Longest Sun obstruction is 0 h; the requirement is <= 3 d."
+    },
+    {
+     "id": "REQ-EARTH",
+     "label": "Earth-visible share",
+     "short": "Earth share",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 0,
+     "at": null,
+     "driver": "Earth visible is 0%; the requirement is >= 50%."
+    },
+    {
+     "id": "REQ-COMMS-GAP",
+     "label": "Longest gap without Earth",
+     "short": "Earth gap",
+     "verdict": "does not meet",
+     "subState": null,
+     "value": 240,
+     "at": {
+      "metH": 0,
+      "relation": "from"
+     },
+     "driver": "Longest Earth obstruction is 10 d from T+0 h; the requirement is <= 4 d."
+    },
+    {
+     "id": "REQ-POWER",
+     "label": "Battery margin above floor (est.)",
+     "short": "battery margin",
+     "verdict": "needs review",
+     "subState": "default assumptions",
+     "value": 80,
+     "at": {
+      "metH": 0,
+      "relation": "at"
+     },
+     "driver": "Battery margin above floor (estimate) is 80% at T+0 h; the requirement is >= 10%."
+    }
+   ],
+   "windows": {
+    "sun": [
+     {
+      "state": "visible",
+      "startH": 0,
+      "endH": 240,
+      "durH": 240
+     }
+    ],
+    "earth": [
+     {
+      "state": "obstructed",
+      "startH": 0,
+      "endH": 240,
+      "durH": 240
+     }
+    ]
+   },
+   "fmt": {
+    "sun": "100%",
+    "earth": "0%",
+    "dark": "0 h",
+    "noEarth": "10 d",
+    "rise": null,
+    "brown": null,
+    "vh": "80.5",
+    "shadow": "81",
+    "meanEl": "0.7"
+   }
+  }
+ },
+ "generatedUtc": "2026-11-15T08:41:22.987Z",
+ "nextGood": {
+  "date": "2027-09-07T12:00:00Z",
+  "cell": {
+   "sun": 100,
+   "sunU": 0,
+   "earth": 66.3,
+   "earthU": 4.3,
+   "dark": 0,
+   "noEarth": 80.8
+  },
+  "extraDays": 6
+ },
+ "validation": {
+  "summary": {
+   "passed": 12,
+   "failed": 0,
+   "notRun": 0,
+   "total": 12
+  },
+  "checks": [
+   {
+    "id": "polar-sun",
+    "name": "Sun elevation at 90°S",
+    "status": "pass",
+    "detail": "-1.59° to 1.59° over 2026-2030",
+    "tolerance": "within ±1.7° (lunar obliquity 1.54°)"
+   },
+   {
+    "id": "polar-earth",
+    "name": "Earth elevation at 90°S",
+    "status": "pass",
+    "detail": "-7.10° to 6.61°",
+    "tolerance": "within ±7.5° (libration in latitude plus parallax)"
+   },
+   {
+    "id": "libration",
+    "name": "Sub-Earth point (libration)",
+    "status": "pass",
+    "detail": "mean -0.07°, 0.02°; range ±8.05° lon, ±6.86° lat",
+    "tolerance": "mean within 0.5° of (0, 0); ranges 6-9° and 6-7.5°"
+   },
+   {
+    "id": "azimuth-geometry",
+    "name": "Azimuth convention (geometry)",
+    "status": "pass",
+    "detail": "a point placed due east reads 90.000°",
+    "tolerance": "within 0.01° of 90°"
+   },
+   {
+    "id": "azimuth-dem",
+    "name": "Azimuth convention (DEM)",
+    "status": "pass",
+    "detail": "a synthetic wall due east appears at 94° (26.3° high); north, south, west stay at -0.0°",
+    "tolerance": "peak within 5° of 90°"
+   },
+   {
+    "id": "terrain-sanity",
+    "name": "Terrain sanity (crater floor vs rim)",
+    "status": "pass",
+    "detail": "Shackleton floor horizon 19.8° to 23.6°; rim -2.6° to 1.0°",
+    "tolerance": "floor above 10°, rim below 5°"
+   },
+   {
+    "id": "missing-terrain",
+    "name": "Missing terrain is never 'visible'",
+    "status": "pass",
+    "detail": "Shiv Shakti point (Chandrayaan-3) has no terrain data: 0 of 1441 samples classified visible; the rest are uncertain or obstructed",
+    "tolerance": "0 visible samples"
+   },
+   {
+    "id": "coordinates",
+    "name": "Site coordinates",
+    "status": "pass",
+    "detail": "4 verified and 4 corrected against a cited source; none left to verify",
+    "tolerance": "every site verified or corrected with a citation"
+   },
+   {
+    "id": "kernel-coverage",
+    "name": "SPICE kernel coverage",
+    "status": "pass",
+    "detail": "table 2026-01-01 to 2031-01-01 lies inside kernel coverage 1849-12-25 to 2150-01-21",
+    "tolerance": "table window inside kernel coverage"
+   },
+   {
+    "id": "horizons",
+    "name": "Independent check against JPL Horizons",
+    "status": "pass",
+    "detail": "30 Sun and Earth azimuth/elevation comparisons (3 sites, 5 times including both demo dates); worst difference 0.00002°",
+    "tolerance": "under 0.001°"
+   },
+   {
+    "id": "illumination-benchmark",
+    "name": "Illumination benchmark (published LOLA maps)",
+    "status": "pass",
+    "detail": "45 points against NASA PGDA average-illumination maps: Sun median difference 0.97 points (RMS 1.97, worst 5.82); Earth median 0.24 points (RMS 1.75, worst 7.4)",
+    "tolerance": "median under 1.5 points (Sun) and 1.0 (Earth); RMS under 3 points"
+   },
+   {
+    "id": "regression",
+    "name": "Browser engine against Python reference",
+    "status": "pass",
+    "detail": "4 reference scenarios written; the browser re-runs them on load and node tests/regression.js checks them in CI",
+    "tolerance": "angles within 1e-9°, identical visibility states"
+   }
+  ],
+  "horizons": {
+   "worst": 0.000022,
+   "n": 30,
+   "tol": 0.001,
+   "sites": [
+    "mons-mouton",
+    "connecting-ridge",
+    "shiv-shakti"
+   ],
+   "dates": [
+    "2027-08-11T12:00:00Z",
+    "2027-09-01T12:00:00Z",
+    "2027-07-03T12:00:00Z",
+    "2027-10-16T12:00:00Z",
+    "2027-08-16T06:30:00Z"
+   ]
+  },
+  "bench": {
+   "n": 45,
+   "sun": {
+    "all": {
+     "n": 45,
+     "meanAbs": 1.46,
+     "medianAbs": 0.97,
+     "median": -0.78,
+     "bias": -0.89,
+     "rms": 1.97,
+     "maxAbs": 5.82
+    },
+    "sites": {
+     "n": 6,
+     "meanAbs": 2.11,
+     "medianAbs": 1.48,
+     "median": -1.48,
+     "bias": -1.8,
+     "rms": 2.84,
+     "maxAbs": 5.82
+    },
+    "samples": {
+     "n": 39,
+     "meanAbs": 1.35,
+     "medianAbs": 0.89,
+     "median": -0.7,
+     "bias": -0.75,
+     "rms": 1.8,
+     "maxAbs": 5.16
+    }
+   },
+   "earth": {
+    "all": {
+     "n": 45,
+     "meanAbs": 0.84,
+     "medianAbs": 0.24,
+     "median": -0.19,
+     "bias": 0.1,
+     "rms": 1.75,
+     "maxAbs": 7.4
+    },
+    "sites": {
+     "n": 6,
+     "meanAbs": 0.48,
+     "medianAbs": 0.2,
+     "median": -0.2,
+     "bias": -0.46,
+     "rms": 0.91,
+     "maxAbs": 2.19
+    },
+    "samples": {
+     "n": 39,
+     "meanAbs": 0.9,
+     "medianAbs": 0.25,
+     "median": -0.18,
+     "bias": 0.19,
+     "rms": 1.85,
+     "maxAbs": 7.4
+    }
+   },
+   "nearField": {
+    "0": {
+     "sun": {
+      "n": 45,
+      "meanAbs": 5.67,
+      "medianAbs": 1.78,
+      "median": -1.78,
+      "bias": -5.54,
+      "rms": 9.94,
+      "maxAbs": 37.38
+     },
+     "earth": {
+      "n": 45,
+      "meanAbs": 1.78,
+      "medianAbs": 0.3,
+      "median": -0.25,
+      "bias": -1.63,
+      "rms": 3.39,
+      "maxAbs": 11.58
+     }
+    },
+    "120": {
+     "sun": {
+      "n": 45,
+      "meanAbs": 1.46,
+      "medianAbs": 0.97,
+      "median": -0.78,
+      "bias": -0.89,
+      "rms": 1.97,
+      "maxAbs": 5.82
+     },
+     "earth": {
+      "n": 45,
+      "meanAbs": 0.84,
+      "medianAbs": 0.24,
+      "median": -0.19,
+      "bias": 0.1,
+      "rms": 1.75,
+      "maxAbs": 7.4
+     }
+    },
+    "300": {
+     "sun": {
+      "n": 45,
+      "meanAbs": 2.15,
+      "medianAbs": 0.89,
+      "median": 0,
+      "bias": 1.54,
+      "rms": 3.67,
+      "maxAbs": 14.87
+     },
+     "earth": {
+      "n": 45,
+      "meanAbs": 1.07,
+      "medianAbs": 0.22,
+      "median": -0.16,
+      "bias": 0.64,
+      "rms": 2.39,
+      "maxAbs": 11.2
+     }
+    }
+   },
+   "used": 120,
+   "sites": [
+    {
+     "id": "mons-mouton",
+     "name": "Mons Mouton (IM-2 Athena site)",
+     "kind": "site",
+     "lat": -84.7909,
+     "lon": 29.2067,
+     "publishedSunPct": 45.1,
+     "publishedEarthPct": 92.08,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 44.97,
+       "dSunPct": -0.13,
+       "oursEarthPct": 92.12,
+       "dEarthPct": 0.04
+      },
+      "120": {
+       "oursSunPct": 46.06,
+       "dSunPct": 0.95,
+       "oursEarthPct": 92.12,
+       "dEarthPct": 0.04
+      },
+      "300": {
+       "oursSunPct": 46.06,
+       "dSunPct": 0.95,
+       "oursEarthPct": 92.12,
+       "dEarthPct": 0.04
+      }
+     },
+     "oursSunPct": 46.06,
+     "dSunPct": 0.95,
+     "oursEarthPct": 92.12,
+     "dEarthPct": 0.04
+    },
+    {
+     "id": "connecting-ridge",
+     "name": "Connecting Ridge",
+     "kind": "site",
+     "lat": -89.4749,
+     "lon": -137.4431,
+     "publishedSunPct": 88.44,
+     "publishedEarthPct": 58.08,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 77.59,
+       "dSunPct": -10.86,
+       "oursEarthPct": 57.78,
+       "dEarthPct": -0.3
+      },
+      "120": {
+       "oursSunPct": 87.39,
+       "dSunPct": -1.06,
+       "oursEarthPct": 57.9,
+       "dEarthPct": -0.19
+      },
+      "300": {
+       "oursSunPct": 87.76,
+       "dSunPct": -0.69,
+       "oursEarthPct": 57.9,
+       "dEarthPct": -0.19
+      }
+     },
+     "oursSunPct": 87.39,
+     "dSunPct": -1.06,
+     "oursEarthPct": 57.9,
+     "dEarthPct": -0.19
+    },
+    {
+     "id": "shackleton-rim",
+     "name": "Shackleton rim",
+     "kind": "site",
+     "lat": -89.7843,
+     "lon": -155.9041,
+     "publishedSunPct": 85.46,
+     "publishedEarthPct": 56.68,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 77,
+       "dSunPct": -8.46,
+       "oursEarthPct": 56.1,
+       "dEarthPct": -0.58
+      },
+      "120": {
+       "oursSunPct": 82.5,
+       "dSunPct": -2.96,
+       "oursEarthPct": 56.44,
+       "dEarthPct": -0.24
+      },
+      "300": {
+       "oursSunPct": 87.17,
+       "dSunPct": 1.71,
+       "oursEarthPct": 56.44,
+       "dEarthPct": -0.24
+      }
+     },
+     "oursSunPct": 82.5,
+     "dSunPct": -2.96,
+     "oursEarthPct": 56.44,
+     "dEarthPct": -0.24
+    },
+    {
+     "id": "de-gerlache-rim",
+     "name": "de Gerlache rim",
+     "kind": "site",
+     "lat": -88.6646,
+     "lon": -68.3956,
+     "publishedSunPct": 82.69,
+     "publishedEarthPct": 61.42,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 80.79,
+       "dSunPct": -1.9,
+       "oursEarthPct": 61.19,
+       "dEarthPct": -0.23
+      },
+      "120": {
+       "oursSunPct": 80.79,
+       "dSunPct": -1.9,
+       "oursEarthPct": 61.22,
+       "dEarthPct": -0.2
+      },
+      "300": {
+       "oursSunPct": 83.01,
+       "dSunPct": 0.32,
+       "oursEarthPct": 61.22,
+       "dEarthPct": -0.2
+      }
+     },
+     "oursSunPct": 80.79,
+     "dSunPct": -1.9,
+     "oursEarthPct": 61.22,
+     "dEarthPct": -0.2
+    },
+    {
+     "id": "malapert-massif",
+     "name": "Malapert massif",
+     "kind": "site",
+     "lat": -86.0011,
+     "lon": 2.055,
+     "publishedSunPct": 81.89,
+     "publishedEarthPct": 58.7,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 58.48,
+       "dSunPct": -23.42,
+       "oursEarthPct": 56.45,
+       "dEarthPct": -2.25
+      },
+      "120": {
+       "oursSunPct": 76.07,
+       "dSunPct": -5.82,
+       "oursEarthPct": 56.51,
+       "dEarthPct": -2.19
+      },
+      "300": {
+       "oursSunPct": 80.74,
+       "dSunPct": -1.16,
+       "oursEarthPct": 58.78,
+       "dEarthPct": 0.08
+      }
+     },
+     "oursSunPct": 76.07,
+     "dSunPct": -5.82,
+     "oursEarthPct": 56.51,
+     "dEarthPct": -2.19
+    },
+    {
+     "id": "shackleton-floor",
+     "name": "Shackleton crater floor (shadow reference)",
+     "kind": "site",
+     "lat": -89.6698,
+     "lon": 129.6517,
+     "publishedSunPct": 0,
+     "publishedEarthPct": 0,
+     "byNearFieldM": {
+      "0": {
+       "oursSunPct": 0,
+       "dSunPct": 0,
+       "oursEarthPct": 0,
+       "dEarthPct": 0
+      },
+      "120": {
+       "oursSunPct": 0,
+       "dSunPct": 0,
+       "oursEarthPct": 0,
+       "dEarthPct": 0
+      },
+      "300": {
+       "oursSunPct": 0,
+       "dSunPct": 0,
+       "oursEarthPct": 0,
+       "dEarthPct": 0
+      }
+     },
+     "oursSunPct": 0,
+     "dSunPct": 0,
+     "oursEarthPct": 0,
+     "dEarthPct": 0
+    }
+   ]
+  }
+ },
+ "config": {
+  "toleranceDeg": 0.27,
+  "stepMin": 10,
+  "toleranceRationale": "0.27 deg is the Sun's angular radius: inside this band the solar disc is partly cut by terrain, and it is also the scale of error expected from 1-degree azimuth bins and 40-120 m DEM cells. Samples inside the band are classified 'uncertain', not visible or obstructed. The same band is applied to Earth.",
+  "observerHeightM": 2,
+  "sweep": {
+   "startUtc": "2027-07-03T12:00:00Z",
+   "stepDays": 3,
+   "count": 36,
+   "durationDays": 10
+  },
+  "nearFieldM": 120,
+  "nearFieldRationale": "Terrain closer than 120 m (three 40 m DEM cells) is treated as the landing spot itself, not as horizon. At grazing Sun angles, metre-scale relief inside this distance dominates the horizon on ridge crests, yet the DEM does not resolve it reliably and lander placement controls it. 120 m gave the best agreement with the published LOLA illumination maps (see benchmark)."
+ },
+ "hw": {
+  "panelType": "vertical-tracking",
+  "panelAzDeg": 0,
+  "panelAreaM2": 2,
+  "efficiency": 0.28,
+  "losses": 0.1,
+  "loadW": 150,
+  "batteryWh": 5000,
+  "dod": 0.8,
+  "initialSocPct": 100,
+  "minEarthElevDeg": 2,
+  "confirmed": false
+ },
+ "requirements": [
+  {
+   "id": "REQ-SUN",
+   "label": "Sun-visible share",
+   "metric": "sunlitPct",
+   "op": ">=",
+   "threshold": 60,
+   "unit": "%",
+   "visibilityDependent": true,
+   "powerDependent": false,
+   "rationale": "Enough sunlit time for solar-powered surface operations.",
+   "short": "Sun share"
+  },
+  {
+   "id": "REQ-DARK",
+   "label": "Longest Sun obstruction",
+   "metric": "longestDarkGapH",
+   "op": "<=",
+   "threshold": 72,
+   "unit": "h",
+   "visibilityDependent": true,
+   "powerDependent": false,
+   "rationale": "Darkness the lander must survive on battery and heaters.",
+   "short": "Sun obstruction"
+  },
+  {
+   "id": "REQ-EARTH",
+   "label": "Earth-visible share",
+   "metric": "earthVisiblePct",
+   "op": ">=",
+   "threshold": 50,
+   "unit": "%",
+   "visibilityDependent": true,
+   "powerDependent": false,
+   "rationale": "Geometric DTE availability (not a link budget).",
+   "short": "Earth share"
+  },
+  {
+   "id": "REQ-COMMS-GAP",
+   "label": "Longest gap without Earth",
+   "metric": "longestNoEarthGapH",
+   "op": "<=",
+   "threshold": 96,
+   "unit": "h",
+   "visibilityDependent": true,
+   "powerDependent": false,
+   "rationale": "Onboard autonomy and data buffering duration.",
+   "short": "Earth gap"
+  },
+  {
+   "id": "REQ-POWER",
+   "label": "Battery margin above floor (est.)",
+   "metric": "socMarginPct",
+   "op": ">=",
+   "threshold": 10,
+   "unit": "%",
+   "visibilityDependent": true,
+   "powerDependent": true,
+   "rationale": "Minimum charge stays at least 10% of capacity above the 20% depth-of-discharge floor (i.e. never below 30% charge). The change-spec '20% battery' is the floor itself, so it is expressed here as a margin above it; 0 means the battery reached the floor.",
+   "short": "battery margin"
+  }
+ ],
+ "sites": [
+  {
+   "id": "mons-mouton",
+   "name": "Mons Mouton (IM-2 Athena site)",
+   "lat": -84.7906,
+   "lon": 29.1957,
+   "category": "candidate",
+   "terrain": "lola",
+   "demo": true,
+   "coordStatus": "verified",
+   "source": "LROC (NASA/GSFC/Arizona State University), 'IM-2 Athena Seen Obliquely' (image 1408): lander at 84.7906°S, 29.1957°E.",
+   "sourceUrl": "https://lroc.im-ldi.com/images/1408",
+   "notes": "Intuitive Machines IM-2 landing site, March 2025; former VIPER target region.",
+   "elevationM": 5321.7,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "connecting-ridge",
+   "name": "Connecting Ridge",
+   "lat": -89.4749,
+   "lon": -137.4431,
+   "category": "candidate",
+   "terrain": "lola",
+   "demo": true,
+   "coordStatus": "corrected",
+   "source": "Local maximum of the published LOLA average-illumination map (NASA GSFC PGDA product 69, AVGVISIB_85S_060M_201608 (Mazarico et al. 2011 method, 18.6-year average solar illumination, 60 m/pix)); corresponds to Site 01 (Connecting ridge) in the PGDA south-pole site list (numbering of Mazarico et al. 2011). Brightest pixel of the whole south-polar map.",
+   "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+   "notes": "Ridge between Shackleton and de Gerlache craters. Earlier entry 89.45°S, 222.69°E (Mazarico et al. 2011, 240 m DEM) moved 2.9 km to the 60 m product maximum.",
+   "elevationM": 1947.1,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "shackleton-rim",
+   "name": "Shackleton rim",
+   "lat": -89.7843,
+   "lon": -155.9041,
+   "category": "candidate",
+   "terrain": "lola",
+   "demo": false,
+   "coordStatus": "corrected",
+   "source": "Local maximum of the published LOLA average-illumination map (NASA GSFC PGDA product 69, AVGVISIB_85S_060M_201608 (Mazarico et al. 2011 method, 18.6-year average solar illumination, 60 m/pix)); corresponds to Site 04 (Shackleton rim) in the PGDA south-pole site list (numbering of Mazarico et al. 2011).",
+   "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+   "notes": "Rim of a 21 km crater whose floor is permanently shadowed.",
+   "elevationM": 1735.9,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "de-gerlache-rim",
+   "name": "de Gerlache rim",
+   "lat": -88.6646,
+   "lon": -68.3956,
+   "category": "candidate",
+   "terrain": "lola",
+   "demo": false,
+   "coordStatus": "corrected",
+   "source": "Local maximum of the published LOLA average-illumination map (NASA GSFC PGDA product 69, AVGVISIB_85S_060M_201608 (Mazarico et al. 2011 method, 18.6-year average solar illumination, 60 m/pix)); corresponds to Site 11 (de Gerlache rim) in the PGDA south-pole site list (numbering of Mazarico et al. 2011).",
+   "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+   "notes": "",
+   "elevationM": 1814.6,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "malapert-massif",
+   "name": "Malapert massif",
+   "lat": -86.0011,
+   "lon": 2.055,
+   "category": "candidate",
+   "terrain": "lola",
+   "demo": false,
+   "coordStatus": "corrected",
+   "source": "Local maximum of the published LOLA average-illumination map (NASA GSFC PGDA product 69, AVGVISIB_85S_060M_201608 (Mazarico et al. 2011 method, 18.6-year average solar illumination, 60 m/pix)); corresponds to Site 23 (Malapert massif) in the PGDA south-pole site list (numbering of Mazarico et al. 2011).",
+   "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+   "notes": "Near-side facing massif about 5 km high.",
+   "elevationM": 5155.3,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "shackleton-floor",
+   "name": "Shackleton crater floor (shadow reference)",
+   "lat": -89.67,
+   "lon": 129.78,
+   "category": "other",
+   "terrain": "lola",
+   "demo": false,
+   "coordStatus": "verified",
+   "source": "Point inside Shackleton crater that the published PGDA map classifies as permanent shadow (DN = 0). Contrast case, not a landing site.",
+   "sourceUrl": "https://pgda.gsfc.nasa.gov/products/69",
+   "notes": "Deep-crater reference for the terrain sanity check.",
+   "elevationM": -2788.9,
+   "hasTerrainMask": true
+  },
+  {
+   "id": "shiv-shakti",
+   "name": "Shiv Shakti point (Chandrayaan-3)",
+   "lat": -69.373,
+   "lon": 32.319,
+   "category": "past",
+   "terrain": "none",
+   "demo": false,
+   "coordStatus": "verified",
+   "source": "ISRO, Chandrayaan-3 Vikram landing site (69.373°S, 32.319°E).",
+   "sourceUrl": "https://www.isro.gov.in/Chandrayaan3_Details.html",
+   "notes": "Outside the polar DEM tiles used here, so terrain is unavailable for this site.",
+   "elevationM": null,
+   "hasTerrainMask": false
+  },
+  {
+   "id": "south-pole",
+   "name": "Geographic south pole (90°S)",
+   "lat": -90,
+   "lon": 0,
+   "category": "other",
+   "terrain": "lola",
+   "demo": false,
+   "coordStatus": "verified",
+   "source": "Definition. Used for the polar-limit validation checks.",
+   "sourceUrl": "",
+   "notes": "Azimuth 0 here points along the 0° meridian.",
+   "elevationM": 1289.6,
+   "hasTerrainMask": true
+  }
+ ],
+ "sources": [
+  {
+   "id": "lola-ldem",
+   "name": "LRO LOLA polar gridded DEMs LDEM_85S_40M, LDEM_80S_80M, LDEM_75S_120M",
+   "version": "PDS3 V2.0 (2017-06-15)",
+   "url": "https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/",
+   "qualityClass": "measured",
+   "note": "Heights in m relative to a 1737.4 km sphere (DN × 0.5). Also distributed via PGDA (pgda.gsfc.nasa.gov) and PDS Geosciences."
+  },
+  {
+   "id": "pgda-illum",
+   "name": "NASA GSFC PGDA product 69: LOLA average solar illumination and Earth visibility maps (Mazarico et al. 2011, Icarus 211; 2016 update)",
+   "version": "AVGVISIB_85S_060M_201608, AVGVISIB_75S_120M_201608",
+   "url": "https://pgda.gsfc.nasa.gov/products/69",
+   "qualityClass": "measured",
+   "note": "Used as the illumination benchmark, for site coordinates and as map context layers."
+  },
+  {
+   "id": "naif-spice",
+   "name": "NAIF SPICE kernels: naif0012.tls, de440s.bsp, moon_pa_de440_200625.bpc, moon_de440_250416.tf, pck00011.tpc",
+   "version": "CSPICE N0067 via spiceypy",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/",
+   "qualityClass": "computed-geometry"
+  },
+  {
+   "id": "horizons",
+   "name": "JPL Horizons System (independent cross-check)",
+   "version": "API 1.2, DE441",
+   "url": "https://ssd.jpl.nasa.gov/horizons/",
+   "qualityClass": "computed-geometry"
+  },
+  {
+   "id": "quickmap",
+   "name": "LROC QuickMap (ASU): imagery and topography to inspect sites",
+   "version": "web",
+   "url": "https://quickmap.lroc.im-ldi.com/",
+   "qualityClass": "measured"
+  },
+  {
+   "id": "moontrek",
+   "name": "NASA Moon Trek: 3-D terrain to inspect sites and horizons",
+   "version": "web",
+   "url": "https://trek.nasa.gov/moon/",
+   "qualityClass": "measured"
+  },
+  {
+   "id": "csa-moon",
+   "name": "Canadian Space Agency: Moon exploration (Artemis, Canadarm3, lunar rover)",
+   "version": "web",
+   "url": "https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/",
+   "qualityClass": "demo-only"
+  },
+  {
+   "id": "solar-constant",
+   "name": "Total solar irradiance 1361 W/m² (Kopp & Lean 2011)",
+   "version": "GRL 38",
+   "url": "https://doi.org/10.1029/2010GL045777",
+   "qualityClass": "measured"
+  },
+  {
+   "id": "isro-ch3",
+   "name": "ISRO Chandrayaan-3 landing site (Shiv Shakti point)",
+   "version": "2023",
+   "url": "https://www.isro.gov.in/Chandrayaan3_Details.html",
+   "qualityClass": "measured"
+  },
+  {
+   "id": "lroc-im2",
+   "name": "LROC: IM-2 Athena lander position (image 1408)",
+   "version": "2025",
+   "url": "https://lroc.im-ldi.com/images/1408",
+   "qualityClass": "measured"
+  }
+ ],
+ "rules": [
+  {
+   "id": "R5",
+   "title": "Terrain unavailable",
+   "severity": "warning",
+   "log": "Treat every visibility figure here as an upper bound: terrain data is unavailable for this site."
+  },
+  {
+   "id": "R9",
+   "title": "Landing in darkness",
+   "severity": "critical",
+   "log": "Land in darkness: the Sun stays hidden until {rise|met}."
+  },
+  {
+   "id": "R4",
+   "title": "Battery floor",
+   "severity": "critical",
+   "log": "Battery reaches its floor at {t|met} (est.): shed load or carry more storage."
+  },
+  {
+   "id": "R8",
+   "title": "No direct-to-Earth geometry",
+   "severity": "critical",
+   "log": "No direct-to-Earth geometry in this window: Earth never clears {minEl|deg}. Plan on a relay."
+  },
+  {
+   "id": "R2",
+   "title": "Communications gap",
+   "severity": "warning",
+   "log": "Buffer data and run autonomously for up to {gap|h} without Earth in view."
+  },
+  {
+   "id": "R1",
+   "title": "Storage",
+   "severity": "info",
+   "log": "Size storage for {gap|h} without Sun: about {wh|wh} usable at {load|w} (est.)."
+  },
+  {
+   "id": "R11",
+   "title": "Grazing geometry",
+   "severity": "warning",
+   "log": "Treat grazing hours as unconfirmed: Sun {su|pct}, Earth {eu|pct} of the mission sit within {tol|deg2} of the limit."
+  },
+  {
+   "id": "R10",
+   "title": "First sunset",
+   "severity": "info",
+   "log": "Fit critical first-day work before the first sunset at {t|met}."
+  },
+  {
+   "id": "R3",
+   "title": "Panel orientation",
+   "severity": "info",
+   "log": "Mount the array vertically: about {x|x1} the energy of a flat one (est.)."
+  },
+  {
+   "id": "R7",
+   "title": "Long shadows",
+   "severity": "info",
+   "log": "Expect long shadows: a 1 m rock casts about {len|m}."
+  },
+  {
+   "id": "R6",
+   "title": "Scenario difference",
+   "severity": "info",
+   "log": "{A} to {B}"
+  }
+ ],
+ "ephemeris": {
+  "start": "2026-01-01T00:00:00Z",
+  "end": "2031-01-01T00:00:00Z",
+  "count": 43825,
+  "step": 3600,
+  "adapter": {
+   "id": "spice-geometry",
+   "kind": "geometry",
+   "version": "2.0.0",
+   "provider": "NASA/JPL NAIF",
+   "sources": [
+    {
+     "file": "naif0012.tls",
+     "type": "LSK",
+     "role": "leap seconds",
+     "bytes": 5257
+    },
+    {
+     "file": "de440s.bsp",
+     "type": "SPK",
+     "role": "planetary and lunar ephemeris DE440 (1849-2150)",
+     "bytes": 32726016
+    },
+    {
+     "file": "moon_pa_de440_200625.bpc",
+     "type": "PCK",
+     "role": "lunar orientation, principal axes, DE440",
+     "bytes": 12863488
+    },
+    {
+     "file": "moon_de440_250416.tf",
+     "type": "FK",
+     "role": "lunar frames MOON_PA / MOON_ME for DE440",
+     "bytes": 19478
+    },
+    {
+     "file": "pck00011.tpc",
+     "type": "PCK",
+     "role": "planetary constants",
+     "bytes": 131226
+    }
+   ],
+   "sourceUrl": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/",
+   "toolkit": "CSPICE_N0067",
+   "frame": "MOON_ME",
+   "frameNote": "DE440 lunar mean-Earth/polar-axis frame; planetocentric latitude, east-positive longitude",
+   "observer": "MOON (centre); site parallax applied by the caller",
+   "timeSystem": "UTC input, converted to TDB with naif0012.tls (TDB = UTC + 69.184 s in 2017-2030+)",
+   "aberration": "LT+S",
+   "aberrationNote": "LT+S: apparent position (one-way light time and stellar aberration), the direction in which the body is actually seen",
+   "coverage": {
+    "startUtc": "1849-12-25T23:59:18Z",
+    "endUtc": "2150-01-21T23:58:50Z"
+   }
+  }
+ },
+ "terrain": {
+  "product": "LDEM_85S_40M+LDEM_80S_80M+LDEM_75S_120M",
+  "version": "LDEM_85S_40M V2.0 (2017-06-15), LDEM_80S_80M V2.0 (2017-06-15), LDEM_75S_120M V2.0 (2017-06-15)",
+  "res": [
+   40,
+   80,
+   120
+  ],
+  "extentKm": 200,
+  "observer": 2,
+  "nearField": 120,
+  "method": "radial max elevation angle with curvature correction (exact 3-D, sphere R=1737.4 km), finest DEM per sample, 5 sub-rays per 1 deg bin (max), terrain closer than 120 m excluded (treated as the site)"
+ },
+ "engine": "selenix-engine 2.0.0",
+ "metricsCatalogue": {
+  "sunlitPct": {
+   "label": "Sun visible",
+   "unit": "%",
+   "q": "computed-geometry",
+   "method": "Share of samples classified visible: Sun centre elevation above the terrain horizon at its azimuth by more than the tolerance."
+  },
+  "earthVisiblePct": {
+   "label": "Earth visible",
+   "unit": "%",
+   "q": "computed-geometry",
+   "method": "Share of samples classified visible: Earth centre above max(terrain horizon, minimum antenna elevation) by more than the tolerance."
+  },
+  "sunVisibleH": {
+   "label": "Total Sun-visible duration",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "Number of visible samples times the sampling step."
+  },
+  "earthVisibleH": {
+   "label": "Total Earth-visible duration",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "Number of visible samples times the sampling step."
+  },
+  "longestDarkGapH": {
+   "label": "Longest Sun obstruction",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "Longest run of consecutive samples in which the Sun is not classified visible, times the step."
+  },
+  "longestNoEarthGapH": {
+   "label": "Longest Earth obstruction",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "Longest run of consecutive samples in which Earth is not classified visible, times the step."
+  },
+  "timeToSunsetH": {
+   "label": "First sunset",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "From T+0, the first visible-to-not-visible Sun transition. Empty when none falls inside the mission."
+  },
+  "timeToSunriseH": {
+   "label": "First sunrise",
+   "unit": "h",
+   "q": "computed-geometry",
+   "method": "From T+0, the first not-visible-to-visible Sun transition."
+  },
+  "meanSunElDeg": {
+   "label": "Mean Sun elevation while visible",
+   "unit": "°",
+   "q": "computed-geometry",
+   "method": "Mean Sun centre elevation over visible samples."
+  },
+  "maxSunElDeg": {
+   "label": "Maximum Sun elevation",
+   "unit": "°",
+   "q": "computed-geometry",
+   "method": "Highest Sun centre elevation in the mission, regardless of terrain."
+  },
+  "maxEarthElDeg": {
+   "label": "Maximum Earth elevation",
+   "unit": "°",
+   "q": "computed-geometry",
+   "method": "Highest Earth centre elevation in the mission, regardless of terrain."
+  },
+  "shadowLengthM": {
+   "label": "Shadow of a 1 m rock",
+   "unit": "m",
+   "q": "computed-geometry",
+   "method": "1 m / tan(mean Sun elevation while visible), on flat ground."
+  },
+  "energyWh": {
+   "label": "Generated energy (estimate)",
+   "unit": "Wh",
+   "q": "engineering-estimate",
+   "method": "Sum of P(t) x step, P = A x eta x 1361 W/m2 x (1 AU/r)^2 x cos(theta) x sunVisible x (1 - losses), selected panel type."
+  },
+  "verticalToHorizontalRatio": {
+   "label": "Vertical vs horizontal array energy",
+   "unit": "×",
+   "q": "engineering-estimate",
+   "method": "Energy of a vertical Sun-tracking array (cos theta = cos el) divided by a horizontal one (cos theta = sin el), same area and efficiency."
+  },
+  "minSocPct": {
+   "label": "Minimum battery charge (estimate)",
+   "unit": "%",
+   "q": "engineering-estimate",
+   "method": "Battery simulation: constant load, starts at the initial charge, charge clamped to capacity, discharge stops at the depth-of-discharge floor."
+  },
+  "socMarginPct": {
+   "label": "Battery margin above floor (estimate)",
+   "unit": "% of capacity",
+   "q": "engineering-estimate",
+   "method": "Minimum charge minus the depth-of-discharge floor (100% - DoD). Zero means the battery reached the floor."
+  },
+  "brownoutMetH": {
+   "label": "Battery reaches floor (estimate)",
+   "unit": "h",
+   "q": "engineering-estimate",
+   "method": "First mission time at which the charge reaches capacity x (1 - DoD)."
+  },
+  "requiredStorageWh": {
+   "label": "Storage for the longest Sun obstruction (estimate)",
+   "unit": "Wh",
+   "q": "engineering-estimate",
+   "method": "load x longest Sun obstruction / usable depth of discharge (rule of thumb)."
+  },
+  "energyBalanceWh": {
+   "label": "Energy balance (estimate)",
+   "unit": "Wh",
+   "q": "engineering-estimate",
+   "method": "Generated energy minus load energy over the mission."
+  }
+ },
+ "sweep": {
+  "sites": 7,
+  "dates": 36,
+  "stepDays": 3,
+  "start": "2027-07-03T12:00:00Z",
+  "durationDays": 10
+ }
+}
