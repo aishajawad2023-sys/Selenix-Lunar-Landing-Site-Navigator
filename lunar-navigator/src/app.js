@@ -140,7 +140,7 @@
       <button class="chip ${fail ? 'bad' : pass < cs.length ? 'warn' : ''}" data-open="validation" title="Validation checks and tolerances"><span class="dot"></span>Validation <b>${pass} of ${cs.length} passed</b></button>
       <button class="chip" data-open="provenance" title="Kernels, frames, time system, terrain data, engine version">DE440 · ${esc(ad.frame)} · UTC · engine ${esc(E.CODE_VERSION.split(' ')[1])}</button>
       <button class="chip" data-open="hardware" title="Panel, load, battery and antenna inputs">Hardware and antenna inputs ${state.hw.confirmed ? '' : '<span class="muted">(defaults)</span>'}</button>
-      <button class="chip" data-act="export" title="Copy scenarios, indicator records and proofs as JSON">Copy comparison JSON</button>
+      <button class="chip" data-open="export" title="Download samples and windows as CSV, or copy the comparison as JSON">Export</button>
       <button class="chip" data-act="theme" title="Switch light and dark theme" aria-label="Switch theme">${state.theme === 'dark' ? '☀' : '☾'}</button>`;
   }
   function renderDemoBar() {
@@ -652,6 +652,15 @@
         <label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input type="checkbox" id="hwconfirm" ${h.confirmed ? 'checked' : ''}> <span>These are my mission's values. Until this is ticked, power verdicts read “needs review · default assumptions”.</span></label>
         <button class="btn sm ghost" data-act="hwreset" style="margin-top:12px">Restore demo defaults</button>`);
     }
+    if (name === 'export') {
+      const o = ok();
+      return drawer('Export', o.length ? `<p class="muted">Exports cover the scenarios on screen (${o.map(r => `${r.name}: ${esc(r.site.name)}, ${day(r.sc.startUtc)}`).join('; ')}), sampled every ${state.stepMin || CFG.stepMin} min.</p>
+        <div class="boxes" style="grid-template-columns:1fr">
+          <div class="box"><h3>Samples (CSV)</h3><p class="small muted">One row per sample per scenario: Sun and Earth azimuth, elevation, terrain horizon and state; Earth limit; quality state and tolerance. Power and battery columns end in <span class="mono">_est</span> (engineering estimate on ${state.hw.confirmed ? 'confirmed' : 'default'} hardware values). Empty horizon = terrain unavailable.</p><button class="btn sm primary" data-act="csv-samples">Download samples.csv</button></div>
+          <div class="box"><h3>Windows (CSV)</h3><p class="small muted">Every visible, uncertain and obstructed window per scenario and body, with refined start, end and duration, and the sample-count figures the summary metrics use.</p><button class="btn sm primary" data-act="csv-windows">Download windows.csv</button></div>
+          <div class="box"><h3>Comparison (JSON)</h3><p class="small muted">Scenarios, metrics and bounds, windows, requirement proofs, mission log, differences, indicator records and validation status, with provenance.</p><button class="btn sm" data-act="export">Copy to clipboard</button></div>
+        </div><p class="small muted" style="margin-top:12px">Columns use UTC, degrees and hours. Azimuth 0 = local north, clockwise. Frame MOON_ME; ${esc(E.CODE_VERSION)}.</p>` : '<p class="muted">Run a scenario first: press Next step.</p>');
+    }
     if (name === 'whyterrain') return drawer('Why terrain matters', `<p>Near the lunar south pole the Sun never climbs more than a few degrees above the horizon, and Earth sits low too. A ridge a few kilometres away can hide either one for days.</p><p style="margin-top:10px">Without a terrain horizon for a site, SELENIX cannot tell whether a body above the smooth-sphere horizon is really visible. It therefore classifies those samples as <b>uncertain</b>, reports the figures as upper bounds, and never returns “meets” for a visibility requirement.</p><p style="margin-top:10px">Curated sites load their LOLA-derived masks automatically. For another site, compute one with <span class="mono">precompute/horizon_mask.py</span> and load it here.</p>`);
   }
 
@@ -664,6 +673,34 @@
       differences: o.slice(1).map((b, k) => { const c = comparison(o[k], b); return { from: o[k].name, to: b.name, siteChanged: c.siteChanged, landingShiftDays: c.shiftD, deltas: c.deltas.map(x => ({ metric: x.k, from: x.from, to: x.to })), verdictChanges: c.changes.map(x => ({ requirement: x.q.id, from: x.from.verdict, to: x.to.verdict })) }; }),
       indicatorRecords: store.list(r => r.id.startsWith('ind:')), validation: checks() };
     copy(JSON.stringify(out, null, 2), 'Comparison, records and proofs copied as JSON');
+  }
+
+  // ---------------------------------------------------------------- CSV export
+  const csvCell = v => { if (v === null || v === undefined) return ''; const t = typeof v === 'number' ? String(Math.round(v * 1e6) / 1e6) : String(v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const toCsv = (cols, rows) => [cols.join(',')].concat(rows.map(r => cols.map(c => csvCell(r[c])).join(','))).join('\r\n') + '\r\n';
+  function download(name, text) {
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  const isoAt = (res, h) => new Date(res.run.series.t0 + Math.round(h * 3600) * 1000).toISOString().replace('.000', '');
+  const stamp = () => new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-');
+  function samplesCsv() {
+    const rows = [];
+    for (const res of ok()) {
+      const s = res.run.series, hid = E.scenarioId(res.run), geo = res.run.geometryOnly;
+      for (let k = 0; k < s.n; k++) rows.push({ scenario: res.name, scenario_hash: hid, site_id: res.site.id, timestamp_utc: new Date(s.t0 + k * s.stepMin * 60000).toISOString().replace('.000', ''), met_h: k * s.stepMin / 60,
+        sun_azimuth_deg: s.sunAz[k], sun_elevation_deg: s.sunEl[k], sun_terrain_horizon_deg: geo ? null : s.horizonSun[k], sun_state: E.STATE_NAME[s.sunState[k]],
+        earth_azimuth_deg: s.earthAz[k], earth_elevation_deg: s.earthEl[k], earth_terrain_horizon_deg: geo ? null : s.horizonEarth[k], earth_limit_deg: Math.max(geo ? 0 : s.horizonEarth[k], state.hw.minEarthElevDeg), earth_state: E.STATE_NAME[s.earthState[k]],
+        quality_state: res.run.qualityState, tolerance_deg: res.run.config.toleranceDeg, step_min: s.stepMin, power_w_est: s.power[k], battery_soc_pct_est: 100 * s.soc[k] / state.hw.batteryWh, method: E.CODE_VERSION });
+    }
+    return toCsv(['scenario', 'scenario_hash', 'site_id', 'timestamp_utc', 'met_h', 'sun_azimuth_deg', 'sun_elevation_deg', 'sun_terrain_horizon_deg', 'sun_state', 'earth_azimuth_deg', 'earth_elevation_deg', 'earth_terrain_horizon_deg', 'earth_limit_deg', 'earth_state', 'quality_state', 'tolerance_deg', 'step_min', 'power_w_est', 'battery_soc_pct_est', 'method'], rows);
+  }
+  function windowsCsv() {
+    const rows = [];
+    for (const res of ok()) for (const body of ['sun', 'earth']) for (const w of res.run.windows[body]) rows.push({ scenario: res.name, scenario_hash: E.scenarioId(res.run), site_id: res.site.id, body, state: w.state,
+      start_utc: isoAt(res, w.startRefH), start_met_h: w.startRefH, end_utc: isoAt(res, w.endRefH), end_met_h: w.endRefH, ends_with_mission: !!w.endsWithMission, duration_h: w.durationRefH,
+      start_refined: !!w.startRefined, samples: w.samples, sample_start_met_h: w.startH, sample_duration_h: w.durationH, step_min: res.run.series.stepMin, tolerance_deg: res.run.config.toleranceDeg, terrain: res.run.geometryOnly ? 'unavailable' : 'horizon_' + res.site.id });
+    return toCsv(['scenario', 'scenario_hash', 'site_id', 'body', 'state', 'start_utc', 'start_met_h', 'end_utc', 'end_met_h', 'ends_with_mission', 'duration_h', 'start_refined', 'samples', 'sample_start_met_h', 'sample_duration_h', 'step_min', 'tolerance_deg', 'terrain'], rows);
   }
 
   // ---------------------------------------------------------------- render
@@ -695,7 +732,7 @@
   let maskSite = null;
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-ev],[data-copyev],[data-open],[data-act],[data-beat],[data-hz],[data-hm],[data-layer],[data-view],[data-cell],[data-rdel],[data-copy],[data-unmask],[data-sdel],[data-log],[data-loadmask],[data-jump],[data-wb],[data-step],#drawer-close,#req-add,#req-reset,#cs-add,#up-go');
-    if (!t) { if (!e.target.closest('#drawer') && e.target.id !== 'tl-canvas') closeDrawer(); return; }
+    if (!t) { if (!e.target.closest('#drawer') && e.target.id !== 'tl-canvas' && !(e.target.tagName === 'A' && e.target.hasAttribute('download'))) closeDrawer(); return; }
     if (t.dataset.ev) return openEvidence(EV[t.dataset.ev]);
     if (t.dataset.copyev) return copy(JSON.stringify(EV[t.dataset.copyev].obj, null, 2), 'Record copied');
     if (t.id === 'drawer-close') return closeDrawer();
@@ -713,6 +750,8 @@
       if (a === 'goreq') { state.mode = 'free'; closeDrawer(); renderAll(); const el = document.querySelector('[data-rf]'); return el && el.scrollIntoView({ block: 'center' }); }
       if (a === 'theme') { state.theme = state.theme === 'dark' ? 'light' : 'dark'; return renderAll(); }
       if (a === 'export') return exportJSON();
+      if (a === 'csv-samples') { download(`selenix-samples-${stamp()}.csv`, samplesCsv()); return toast('samples.csv downloaded'); }
+      if (a === 'csv-windows') { download(`selenix-windows-${stamp()}.csv`, windowsCsv()); return toast('windows.csv downloaded'); }
       if (a === 'play') { if (playing) stopPlay(); else { if (state.cursorH >= tl.maxH) state.cursorH = 0; playing = setInterval(() => { state.cursorH = Math.min(tl.maxH, state.cursorH + 1); renderLive(); if (state.cursorH >= tl.maxH) { stopPlay(); const pb = document.querySelector('[data-act=play]'); if (pb) pb.textContent = '▶ Play'; } }, 70); } t.textContent = playing ? '❚❚ Pause' : '▶ Play'; return; }
       if (a === 'windows') { state.windowsOpen = !state.windowsOpen; t.textContent = state.windowsOpen ? 'Hide windows' : 'Show windows'; return renderWindows(); }
       if (a === 'readout') { state.readoutOpen = !state.readoutOpen; t.textContent = state.readoutOpen ? 'Hide angles' : 'Show angles'; return renderReadout(); }
